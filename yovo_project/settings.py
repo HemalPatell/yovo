@@ -17,6 +17,8 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.onrender.com']
 
 CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com']
 
+SECURE_SSL_REDIRECT = False
+
 # ─── Applications ─────────────────────────────────────────────────────────────
 INSTALLED_APPS = [
     'django.contrib.admin',
