@@ -1,0 +1,321 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}My Wishlist — YOVO{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── Page Layout ───────────────────────────────────── */
+.wishlist-page {
+  padding: 100px 0 80px;
+  min-height: 100vh;
+  background: var(--bg);
+}
+.wishlist-header {
+  margin-bottom: 36px;
+}
+.wishlist-header h1 {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.wishlist-header p {
+  color: var(--text-2);
+  margin-top: 6px;
+  font-size: 0.95rem;
+}
+.wishlist-count-badge {
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-family: var(--font-body);
+}
+
+/* ── Grid ──────────────────────────────────────────── */
+.wishlist-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+/* ── Card ──────────────────────────────────────────── */
+.wish-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+  display: flex;
+  flex-direction: column;
+}
+.wish-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Image */
+.wish-img-wrap {
+  position: relative;
+  aspect-ratio: 4/3;
+  overflow: hidden;
+  background: var(--bg-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3.5rem;
+}
+.wish-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+.wish-card:hover .wish-img-wrap img {
+  transform: scale(1.05);
+}
+.wish-remove-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.9);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(0,0,0,0.08);
+  color: var(--danger, #c8393a);
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s, transform 0.15s;
+  line-height: 1;
+}
+.wish-remove-btn:hover {
+  background: var(--danger, #c8393a);
+  color: #fff;
+  transform: scale(1.1);
+}
+.wish-cat-badge {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+  letter-spacing: 0.02em;
+}
+
+/* Body */
+.wish-body {
+  padding: 16px 18px 12px;
+  flex: 1;
+}
+.wish-title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 6px;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.wish-desc {
+  color: var(--text-2);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  margin: 0 0 10px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.wish-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.78rem;
+  color: var(--text-3, var(--text-2));
+}
+
+/* Footer */
+.wish-footer {
+  padding: 14px 18px 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--bg);
+}
+.wish-price {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+.wish-footer-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Sold badge */
+.wish-sold-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(200,57,58,0.1);
+  border: 1px solid rgba(200,57,58,0.25);
+  color: var(--danger, #c8393a);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+/* ── Empty State ───────────────────────────────────── */
+.wishlist-empty {
+  text-align: center;
+  padding: 80px 24px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+.wishlist-empty-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+  animation: pulse-heart 1.8s ease-in-out infinite;
+}
+@keyframes pulse-heart {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.12); }
+}
+.wishlist-empty h2 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 10px;
+}
+.wishlist-empty p {
+  color: var(--text-2);
+  font-size: 0.95rem;
+  margin: 0 0 28px;
+}
+
+/* ── Added date ────────────────────────────────────── */
+.wish-added {
+  font-size: 0.72rem;
+  color: var(--text-2);
+  margin-top: 4px;
+}
+
+@media (max-width: 600px) {
+  .wishlist-grid { grid-template-columns: 1fr; }
+  .wishlist-header h1 { font-size: 1.5rem; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="wishlist-page">
+  <div class="container">
+
+    <!-- Header -->
+    <div class="wishlist-header reveal">
+      <h1>
+        ♥ My Wishlist
+        {% if wishlist_items %}
+        <span class="wishlist-count-badge">{{ wishlist_items|length }}</span>
+        {% endif %}
+      </h1>
+      <p>Items you've saved — add them to cart whenever you're ready.</p>
+    </div>
+
+    {% if wishlist_items %}
+    <div class="wishlist-grid">
+      {% for entry in wishlist_items %}
+      {% with item=entry.item %}
+      <article class="wish-card reveal">
+
+        <!-- Image -->
+        <div class="wish-img-wrap">
+          {% if item.image %}
+          <img src="{{ item.image.url }}" alt="{{ item.title }}" loading="lazy" />
+          {% else %}
+          {% if item.category == 'clothes' %}👗{% elif item.category == 'accessories' %}👜{% else %}📚{% endif %}
+          {% endif %}
+
+          <!-- Remove from wishlist -->
+          <a href="{% url 'toggle_wishlist' item.pk %}"
+             class="wish-remove-btn"
+             title="Remove from wishlist"
+             onclick="return confirm('Remove {{ item.title }} from wishlist?')">✕</a>
+
+          <!-- Category badge -->
+          <span class="wish-cat-badge">
+            {{ item.get_category_display }}{% if item.subcategory %} › {{ item.get_subcategory_display }}{% endif %}
+          </span>
+        </div>
+
+        <!-- Body -->
+        <div class="wish-body">
+          <a href="{% url 'item_detail' item.pk %}" style="text-decoration:none;">
+            <h3 class="wish-title">{{ item.title }}</h3>
+          </a>
+          <p class="wish-desc">{{ item.description|truncatechars:90 }}</p>
+          <div class="wish-meta">
+            <span>📍 {{ item.get_location_display }}</span>
+            <span>🏷 {{ item.get_condition_display }}</span>
+          </div>
+          <p class="wish-added">♥ Saved {{ entry.added_at|timesince }} ago</p>
+        </div>
+
+        <!-- Footer -->
+        <div class="wish-footer">
+          <span class="wish-price">₹{{ item.price }}</span>
+          <div class="wish-footer-actions">
+            {% if item.is_sold %}
+              <span class="wish-sold-badge">✕ Sold</span>
+            {% elif item.seller != request.user %}
+              <a href="{% url 'add_to_cart' item.pk %}" class="btn btn-sm btn-primary">🛒 Add to Cart</a>
+              <a href="{% url 'item_detail' item.pk %}" class="btn btn-sm btn-ghost">View</a>
+            {% else %}
+              <span class="your-listing" style="font-size:0.8rem;color:var(--text-2);">Your listing</span>
+            {% endif %}
+          </div>
+        </div>
+
+      </article>
+      {% endwith %}
+      {% endfor %}
+    </div>
+
+    {% else %}
+    <!-- Empty state -->
+    <div class="wishlist-empty reveal">
+      <div class="wishlist-empty-icon">♡</div>
+      <h2>Your wishlist is empty</h2>
+      <p>Browse items and tap the heart icon to save things you love. Come back anytime to add them to your cart.</p>
+      <a href="{% url 'home' %}" class="btn btn-primary btn-lg">Browse Items</a>
+    </div>
+    {% endif %}
+
+  </div>
+</section>
+{% endblock %}

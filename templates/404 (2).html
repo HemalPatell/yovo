@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Page Not Found — YOVO</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0f;color:#f0ece8;font-family:'Inter',system-ui,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px}
+.wrap{max-width:480px}
+.icon{font-size:5rem;margin-bottom:24px;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+h1{font-size:5rem;font-weight:800;background:linear-gradient(135deg,#e8853a,#f5a623);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+h2{font-size:1.4rem;font-weight:700;color:#f0ece8;margin-bottom:12px}
+p{color:#9090a8;font-size:0.9rem;line-height:1.6;margin-bottom:32px}
+.btn{display:inline-block;background:linear-gradient(135deg,#e8853a,#f5a623);color:#fff;text-decoration:none;padding:12px 28px;border-radius:10px;font-weight:700;font-size:0.9rem;margin:6px;transition:all 0.2s;box-shadow:0 4px 16px rgba(232,133,58,0.3)}
+.btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(232,133,58,0.4)}
+.btn-ghost{background:transparent;border:1px solid #2a2a38;color:#9090a8}
+.btn-ghost:hover{border-color:#e8853a;color:#e8853a;box-shadow:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="icon">🔍</div>
+  <h1>404</h1>
+  <h2>Page Not Found</h2>
+  <p>Oops! The page you're looking for doesn't exist. It may have been moved, deleted, or you may have typed the URL incorrectly.</p>
+  <a href="/" class="btn">🏠 Go Home</a>
+  <a href="javascript:history.back()" class="btn btn-ghost">← Go Back</a>
+</div>
+</body>
+</html>

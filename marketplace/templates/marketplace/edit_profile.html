@@ -1,0 +1,407 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Edit Profile — YOVO{% endblock %}
+
+{% block extra_css %}
+<style>
+.profile-edit-page { padding: 100px 0 80px; min-height: 100vh; background: var(--bg); }
+
+/* ── Page header ─────────────────────────────────── */
+.pe-header { margin-bottom: 32px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: space-between; }
+.pe-header h1 { font-size: 1.8rem; }
+.pe-header p  { color: var(--text-2); font-size: 0.9rem; }
+
+/* ── Layout ──────────────────────────────────────── */
+.pe-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+/* ── Avatar sidebar ──────────────────────────────── */
+.pe-sidebar {
+  display: flex; flex-direction: column; gap: 16px;
+}
+.pe-avatar-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px 20px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+.pe-av-circle {
+  width: 90px; height: 90px; border-radius: 50%;
+  background: var(--grad-accent); color: #fff;
+  font-size: 2.2rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 14px;
+  border: 3px solid rgba(200,119,58,0.2);
+  overflow: hidden;
+}
+.pe-av-circle img { width: 100%; height: 100%; object-fit: cover; }
+.pe-av-name     { font-weight: 700; font-size: 1.05rem; margin-bottom: 3px; }
+.pe-av-username { font-size: 0.8rem; color: var(--text-3); margin-bottom: 16px; }
+.pe-av-upload label {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: 999px;
+  border: 1.5px solid var(--border);
+  background: var(--bg); font-size: 0.82rem;
+  font-weight: 600; cursor: pointer; color: var(--text-2);
+  transition: all var(--transition);
+}
+.pe-av-upload label:hover { border-color: var(--accent); color: var(--accent); }
+.pe-av-upload input { display: none; }
+
+.pe-nav-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.pe-nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 13px 18px;
+  font-size: 0.875rem; font-weight: 500;
+  color: var(--text-2); cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: all var(--transition);
+  text-decoration: none;
+}
+.pe-nav-item:last-child { border-bottom: none; }
+.pe-nav-item:hover, .pe-nav-item.active { color: var(--accent); background: rgba(200,119,58,0.06); }
+.pe-nav-item.active { font-weight: 700; }
+.pe-nav-icon { font-size: 1rem; }
+
+/* ── Form panels ─────────────────────────────────── */
+.pe-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 24px;
+  display: none;
+}
+.pe-panel.active { display: block; }
+.pe-panel-head {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+.pe-panel-head h2 { font-size: 1rem; font-family: var(--font-body); font-weight: 700; }
+.pe-panel-head p  { font-size: 0.8rem; color: var(--text-3); margin-top: 2px; }
+.pe-panel-body { padding: 24px; display: flex; flex-direction: column; gap: 18px; }
+.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-label { font-size: 0.82rem; font-weight: 600; color: var(--text-2); }
+.form-hint  { font-size: 0.75rem; color: var(--text-3); margin-top: 3px; }
+.form-error { font-size: 0.78rem; color: var(--danger); margin-top: 3px; }
+
+.panel-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px;
+}
+.panel-footer span { font-size: 0.78rem; color: var(--text-3); }
+
+/* ── Password strength ───────────────────────────── */
+.pw-strength-bar {
+  height: 4px; border-radius: 2px;
+  background: var(--border); margin-top: 6px;
+  overflow: hidden;
+}
+.pw-strength-fill {
+  height: 100%; width: 0;
+  border-radius: 2px;
+  transition: width 0.3s, background 0.3s;
+}
+.pw-strength-label { font-size: 0.72rem; color: var(--text-3); margin-top: 4px; }
+
+/* ── Danger zone ─────────────────────────────────── */
+.danger-box {
+  border: 1.5px solid rgba(200,57,58,0.3);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+}
+.danger-box-text strong { display: block; font-size: 0.9rem; margin-bottom: 3px; }
+.danger-box-text p { font-size: 0.8rem; color: var(--text-3); }
+
+/* ── Responsive ─────────────────────────────────── */
+@media (max-width: 760px) {
+  .pe-layout { grid-template-columns: 1fr; }
+  .form-row-2 { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-edit-page">
+  <div class="container">
+
+    <!-- Header -->
+    <div class="pe-header reveal">
+      <div>
+        <h1>Edit Profile</h1>
+        <p>Manage your personal info, account settings and security</p>
+      </div>
+      <a href="{% url 'dashboard' %}" class="btn btn-ghost">← Back to Dashboard</a>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" id="profileForm">
+      {% csrf_token %}
+      <div class="pe-layout">
+
+        <!-- ── Sidebar ──────────────────────────── -->
+        <div class="pe-sidebar reveal">
+
+          <!-- Avatar Card -->
+          <div class="pe-avatar-card">
+            <div class="pe-av-circle" id="avatarPreview">
+              {% if profile.avatar %}
+              <img src="{{ profile.avatar.url }}" alt="Avatar" id="avatarImg" />
+              {% else %}
+              <span id="avatarInitial">{{ user.username|first|upper }}</span>
+              {% endif %}
+            </div>
+            <div class="pe-av-name">{{ user.get_full_name|default:user.username }}</div>
+            <div class="pe-av-username">@{{ user.username }}</div>
+            <div class="pe-av-upload">
+              <label for="{{ form.avatar.id_for_label }}">
+                📷 Change Photo
+              </label>
+              {{ form.avatar }}
+            </div>
+            {% if form.avatar.errors %}
+            <span class="form-error">{{ form.avatar.errors|join:", " }}</span>
+            {% endif %}
+          </div>
+
+          <!-- Nav -->
+          <div class="pe-nav-card">
+            <a class="pe-nav-item active" onclick="showPanel('personal', this)">
+              <span class="pe-nav-icon">👤</span> Personal Info
+            </a>
+            <a class="pe-nav-item" onclick="showPanel('contact', this)">
+              <span class="pe-nav-icon">📍</span> Contact & Address
+            </a>
+            <a class="pe-nav-item" onclick="showPanel('security', this)">
+              <span class="pe-nav-icon">🔒</span> Security
+            </a>
+            <a class="pe-nav-item" onclick="showPanel('danger', this)">
+              <span class="pe-nav-icon">⚠️</span> Account
+            </a>
+          </div>
+
+        </div><!-- end sidebar -->
+
+        <!-- ── Panels ──────────────────────────── -->
+        <div>
+
+          <!-- Personal Info Panel -->
+          <div class="pe-panel active reveal" id="panel-personal">
+            <div class="pe-panel-head">
+              <h2>👤 Personal Information</h2>
+              <p>Update your name, bio and profile details</p>
+            </div>
+            <div class="pe-panel-body">
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label class="form-label">First Name</label>
+                  {{ form.first_name }}
+                  {% if form.first_name.errors %}<span class="form-error">{{ form.first_name.errors|join:", " }}</span>{% endif %}
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Last Name</label>
+                  {{ form.last_name }}
+                  {% if form.last_name.errors %}<span class="form-error">{{ form.last_name.errors|join:", " }}</span>{% endif %}
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Username</label>
+                <input type="text" class="form-input" value="{{ user.username }}" disabled style="opacity:0.6;cursor:not-allowed;" />
+                <span class="form-hint">Username cannot be changed.</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Email Address</label>
+                {{ form.email }}
+                {% if form.email.errors %}<span class="form-error">{{ form.email.errors|join:", " }}</span>{% endif %}
+              </div>
+              <div class="form-group">
+                <label class="form-label">Bio</label>
+                {{ form.bio }}
+                <span class="form-hint">Write a short bio — buyers will see this on your profile.</span>
+                {% if form.bio.errors %}<span class="form-error">{{ form.bio.errors|join:", " }}</span>{% endif %}
+              </div>
+            </div>
+            <div class="panel-footer">
+              <span>Changes are saved immediately.</span>
+              <button type="submit" class="btn btn-primary">Save Personal Info</button>
+            </div>
+          </div>
+
+          <!-- Contact & Address Panel -->
+          <div class="pe-panel" id="panel-contact">
+            <div class="pe-panel-head">
+              <h2>📍 Contact & Address</h2>
+              <p>Used for delivery and helping buyers find you</p>
+            </div>
+            <div class="pe-panel-body">
+              <div class="form-group">
+                <label class="form-label">Phone Number</label>
+                {{ form.phone }}
+                <span class="form-hint">Buyers may use this to contact you directly.</span>
+                {% if form.phone.errors %}<span class="form-error">{{ form.phone.errors|join:", " }}</span>{% endif %}
+              </div>
+              <div class="form-group">
+                <label class="form-label">City / Location</label>
+                {{ form.location }}
+                <span class="form-hint">Displayed on your public profile and listings.</span>
+                {% if form.location.errors %}<span class="form-error">{{ form.location.errors|join:", " }}</span>{% endif %}
+              </div>
+              <div class="form-group">
+                <label class="form-label">Full Address</label>
+                {{ form.address }}
+                <span class="form-hint">Used to auto-fill checkout. Not shown publicly.</span>
+                {% if form.address.errors %}<span class="form-error">{{ form.address.errors|join:", " }}</span>{% endif %}
+              </div>
+            </div>
+            <div class="panel-footer">
+              <span>🔒 Your address is private.</span>
+              <button type="submit" class="btn btn-primary">Save Contact Info</button>
+            </div>
+          </div>
+
+          <!-- Security Panel -->
+          <div class="pe-panel" id="panel-security">
+            <div class="pe-panel-head">
+              <h2>🔒 Security</h2>
+              <p>Change your password to keep your account safe</p>
+            </div>
+            <div class="pe-panel-body">
+              <div class="form-group">
+                <label class="form-label">Current Password</label>
+                <input type="password" class="form-input" name="current_password" placeholder="Enter current password" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">New Password</label>
+                <input type="password" class="form-input" name="new_password1" id="newPw" placeholder="At least 8 characters" oninput="checkStrength(this.value)" />
+                <div class="pw-strength-bar"><div class="pw-strength-fill" id="pwBar"></div></div>
+                <div class="pw-strength-label" id="pwLabel">Enter a password</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Confirm New Password</label>
+                <input type="password" class="form-input" name="new_password2" placeholder="Repeat new password" />
+              </div>
+              <div style="background:rgba(200,119,58,0.08);border:1px solid rgba(200,119,58,0.2);border-radius:var(--radius-sm);padding:12px 16px;font-size:0.8rem;color:var(--text-2);">
+                💡 Password must be at least 8 characters. Use a mix of letters, numbers and symbols for best security.
+              </div>
+            </div>
+            <div class="panel-footer">
+              <span>Use a strong, unique password.</span>
+              <a href="{% url 'login' %}" class="btn btn-primary" onclick="return confirm('This will take you to the password reset page. Continue?')">Change Password</a>
+            </div>
+          </div>
+
+          <!-- Account / Danger Panel -->
+          <div class="pe-panel" id="panel-danger">
+            <div class="pe-panel-head">
+              <h2>⚠️ Account Settings</h2>
+              <p>Manage your account status</p>
+            </div>
+            <div class="pe-panel-body">
+              <div class="danger-box">
+                <div class="danger-box-text">
+                  <strong>Sign Out Everywhere</strong>
+                  <p>Log out of all active sessions on all devices.</p>
+                </div>
+                <a href="{% url 'logout' %}" class="btn btn-ghost">Sign Out</a>
+              </div>
+              <div class="danger-box" style="margin-top:0;">
+                <div class="danger-box-text">
+                  <strong>Delete Account</strong>
+                  <p>Permanently delete your account and all your listings. This cannot be undone.</p>
+                </div>
+                <button type="button" class="btn btn-danger" onclick="confirmDelete()">Delete Account</button>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- end panels -->
+      </div><!-- end pe-layout -->
+    </form>
+  </div>
+</div>
+
+<script>
+// ── Panel switcher ─────────────────────────────────
+function showPanel(name, el) {
+  document.querySelectorAll('.pe-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.pe-nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  el.classList.add('active');
+}
+
+// ── Avatar preview ─────────────────────────────────
+const avatarInput = document.querySelector('input[type="file"][name="avatar"]');
+if (avatarInput) {
+  avatarInput.addEventListener('change', function() {
+    if (this.files && this.files[0]) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const preview = document.getElementById('avatarPreview');
+        const initial = document.getElementById('avatarInitial');
+        let img = document.getElementById('avatarImg');
+        if (!img) {
+          img = document.createElement('img');
+          img.id = 'avatarImg';
+          if (initial) initial.remove();
+          preview.appendChild(img);
+        }
+        img.src = e.target.result;
+        img.style.width = '100%'; img.style.height = '100%'; img.style.objectFit = 'cover';
+      };
+      reader.readAsDataURL(this.files[0]);
+    }
+  });
+}
+
+// ── Password strength checker ──────────────────────
+function checkStrength(pw) {
+  const bar   = document.getElementById('pwBar');
+  const label = document.getElementById('pwLabel');
+  let score = 0;
+  if (pw.length >= 8)  score++;
+  if (pw.length >= 12) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+
+  const levels = [
+    { w: '0%',   bg: 'transparent',     txt: 'Enter a password' },
+    { w: '25%',  bg: 'var(--danger)',    txt: '⚠ Weak' },
+    { w: '50%',  bg: '#f59e0b',          txt: '⚡ Fair' },
+    { w: '75%',  bg: '#3b82f6',          txt: '✔ Good' },
+    { w: '100%', bg: 'var(--success)',   txt: '✅ Strong' },
+  ];
+  const lvl = levels[Math.min(score, 4)];
+  bar.style.width      = lvl.w;
+  bar.style.background = lvl.bg;
+  label.textContent    = lvl.txt;
+  label.style.color    = lvl.bg;
+}
+
+// ── Confirm delete ─────────────────────────────────
+function confirmDelete() {
+  if (confirm('Are you absolutely sure? This will permanently delete your account and all listings. This CANNOT be undone.')) {
+    alert('Account deletion is currently disabled in this demo. Please contact support.');
+  }
+}
+</script>
+{% endblock %}

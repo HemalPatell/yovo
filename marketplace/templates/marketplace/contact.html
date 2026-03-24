@@ -1,0 +1,347 @@
+{% extends 'base.html' %}
+{% block title %}Contact Us — YOVO{% endblock %}
+
+{% block extra_css %}
+<style>
+.contact-page { padding: 100px 0 80px; min-height: 100vh; }
+
+/* Header */
+.contact-header { text-align: center; margin-bottom: 56px; }
+.contact-header-eyebrow {
+  display: inline-block; font-size: .68rem; font-weight: 800;
+  letter-spacing: 3px; text-transform: uppercase; color: var(--accent);
+  background: rgba(200,119,58,.08); border: 1px solid rgba(200,119,58,.2);
+  padding: 5px 16px; border-radius: 999px; margin-bottom: 18px;
+}
+.contact-header h1 {
+  font-family: var(--font-display); font-size: clamp(2rem, 5vw, 3.2rem);
+  font-weight: 400; letter-spacing: -1.5px; margin-bottom: 14px;
+}
+.contact-header p { color: var(--text-2); max-width: 480px; margin: 0 auto; line-height: 1.75; }
+
+/* Layout */
+.contact-layout { display: grid; grid-template-columns: 1fr 380px; gap: 32px; align-items: start; }
+
+/* Form Card */
+.contact-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm);
+}
+.contact-card-head {
+  padding: 20px 28px; border-bottom: 1px solid var(--border); background: var(--bg);
+}
+.contact-card-head h2 { font-size: 1rem; font-weight: 700; font-family: var(--font-body); }
+.contact-card-body { padding: 28px; display: flex; flex-direction: column; gap: 18px; }
+
+.contact-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.contact-field label {
+  display: block; font-size: .72rem; font-weight: 700;
+  letter-spacing: .8px; text-transform: uppercase;
+  color: var(--text-2); margin-bottom: 7px;
+}
+.contact-field input,
+.contact-field select,
+.contact-field textarea {
+  width: 100%; padding: 11px 14px;
+  background: var(--bg); border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text); font-size: .875rem;
+  font-family: var(--font-body); transition: all .2s; outline: none;
+}
+.contact-field input:focus,
+.contact-field select:focus,
+.contact-field textarea:focus {
+  border-color: rgba(200,119,58,.5);
+  box-shadow: 0 0 0 4px rgba(200,119,58,.08);
+}
+.contact-field textarea { resize: vertical; min-height: 130px; }
+
+.contact-submit {
+  width: 100%; padding: 14px;
+  background: linear-gradient(135deg, var(--accent), #e8a96d);
+  color: #fff; font-weight: 700; font-size: .9rem;
+  border: none; border-radius: var(--radius-sm); cursor: pointer;
+  font-family: var(--font-body); letter-spacing: .3px;
+  transition: all .22s; box-shadow: 0 4px 16px rgba(200,119,58,.3);
+}
+.contact-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(200,119,58,.45); }
+
+.contact-success {
+  display: none; text-align: center; padding: 40px 28px;
+}
+.contact-success-icon { font-size: 3.5rem; margin-bottom: 14px; }
+.contact-success h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; }
+.contact-success p  { color: var(--text-2); font-size: .875rem; line-height: 1.65; }
+
+/* Sidebar info */
+.contact-sidebar { display: flex; flex-direction: column; gap: 16px; }
+.contact-info-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); overflow: hidden;
+}
+.contact-info-head {
+  padding: 16px 22px; border-bottom: 1px solid var(--border);
+  background: var(--bg); font-size: .9rem; font-weight: 700;
+}
+.contact-info-body { padding: 18px 22px; display: flex; flex-direction: column; gap: 14px; }
+.cinfo-row {
+  display: flex; align-items: flex-start; gap: 14px;
+}
+.cinfo-icon {
+  width: 40px; height: 40px; border-radius: 12px;
+  background: rgba(200,119,58,.08); border: 1px solid rgba(200,119,58,.15);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; flex-shrink: 0;
+}
+.cinfo-label { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--text-3); margin-bottom: 2px; }
+.cinfo-val   { font-size: .875rem; color: var(--text); font-weight: 500; }
+.cinfo-val a { color: var(--accent); text-decoration: none; }
+.cinfo-val a:hover { text-decoration: underline; }
+
+/* FAQ callout */
+.faq-callout {
+  background: rgba(200,119,58,.06); border: 1px solid rgba(200,119,58,.15);
+  border-radius: var(--radius-lg); padding: 22px;
+}
+.faq-callout h4 { font-size: .9rem; font-weight: 700; margin-bottom: 6px; }
+.faq-callout p  { font-size: .82rem; color: var(--text-2); margin-bottom: 14px; line-height: 1.6; }
+.faq-callout a  {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--grad-accent); color: #fff;
+  padding: 9px 18px; border-radius: 10px; text-decoration: none;
+  font-size: .8rem; font-weight: 700; transition: all .2s;
+}
+.faq-callout a:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(200,119,58,.35); }
+
+/* Response time chip */
+.response-chip {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(58,207,128,.08); border: 1px solid rgba(58,207,128,.2);
+  border-radius: 999px; padding: 8px 16px;
+  font-size: .78rem; color: #2d9e62; font-weight: 600;
+}
+.response-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #3acf80; flex-shrink: 0;
+  box-shadow: 0 0 8px rgba(58,207,128,.5);
+  animation: rpulse 2s ease-in-out infinite;
+}
+@keyframes rpulse { 0%,100%{opacity:1}50%{opacity:.4} }
+
+@media (max-width: 860px) {
+  .contact-layout { grid-template-columns: 1fr; }
+  .contact-form-row { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="contact-page">
+  <div class="container">
+
+    <!-- Header -->
+    <div class="contact-header reveal">
+      <span class="contact-header-eyebrow">Get In Touch</span>
+      <h1>We'd love to hear from you</h1>
+      <p>Have a question, found a bug, or just want to say hi? We respond to every message within 24 hours.</p>
+    </div>
+
+    <div class="contact-layout">
+
+      <!-- Form -->
+      <div class="contact-card reveal">
+        <div class="contact-card-head">
+          <h2>✉️ Send us a message</h2>
+        </div>
+        <div class="contact-card-body" id="contactFormWrap">
+          <div class="contact-form-row">
+            <div class="contact-field">
+              <label>First Name *</label>
+              <input type="text" id="cfFirstName" placeholder="Your first name"
+                     value="{{ user.first_name }}" />
+            </div>
+            <div class="contact-field">
+              <label>Last Name</label>
+              <input type="text" id="cfLastName" placeholder="Your last name"
+                     value="{{ user.last_name }}" />
+            </div>
+          </div>
+          <div class="contact-field">
+            <label>Email Address *</label>
+            <input type="email" id="cfEmail" placeholder="your@email.com"
+                   value="{{ user.email }}" />
+          </div>
+          <div class="contact-field">
+            <label>Subject *</label>
+            <select id="cfSubject">
+              <option value="">Select a topic…</option>
+              <option>General Question</option>
+              <option>Problem with my order</option>
+              <option>Problem with a listing</option>
+              <option>Account issue</option>
+              <option>Report a user</option>
+              <option>Feature request</option>
+              <option>Partnership inquiry</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="contact-field">
+            <label>Message *</label>
+            <textarea id="cfMessage" placeholder="Describe your issue or question in as much detail as possible…"></textarea>
+          </div>
+          <button class="contact-submit" onclick="submitContact()">
+            📨 Send Message
+          </button>
+        </div>
+
+        <!-- Success state -->
+        <div class="contact-success" id="contactSuccess">
+          <div class="contact-success-icon">✅</div>
+          <h3>Message sent!</h3>
+          <p>Thank you for reaching out. We've received your message and will get back to you within 24 hours at the email you provided.</p>
+          <br>
+          <a href="{% url 'home' %}" class="btn btn-primary btn-sm">← Back to Marketplace</a>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="contact-sidebar">
+
+        <div class="response-chip reveal">
+          <span class="response-dot"></span>
+          We typically respond within 24 hours
+        </div>
+
+        <div class="contact-info-card reveal">
+          <div class="contact-info-head">📍 Find us</div>
+          <div class="contact-info-body">
+            <div class="cinfo-row">
+              <div class="cinfo-icon">📧</div>
+              <div>
+                <div class="cinfo-label">Email</div>
+                <div class="cinfo-val"><a href="mailto:hello@yovo.in">hello@yovo.in</a></div>
+              </div>
+            </div>
+            <div class="cinfo-row">
+              <div class="cinfo-icon">🏫</div>
+              <div>
+                <div class="cinfo-label">Based at</div>
+                <div class="cinfo-val">Ahmedabad, Gujarat, India</div>
+              </div>
+            </div>
+            <div class="cinfo-row">
+              <div class="cinfo-icon">🕐</div>
+              <div>
+                <div class="cinfo-label">Support Hours</div>
+                <div class="cinfo-val">Mon–Sat · 10am – 6pm IST</div>
+              </div>
+            </div>
+            <div class="cinfo-row">
+              <div class="cinfo-icon">💬</div>
+              <div>
+                <div class="cinfo-label">For order issues</div>
+                <div class="cinfo-val">Use the in-app chat with your seller — fastest resolution</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-callout reveal">
+          <h4>🔍 Check our FAQ first</h4>
+          <p>Most questions about orders, payments, and listings are answered in our FAQ. It's quicker than waiting for a reply!</p>
+          <a href="{% url 'faq' %}">View FAQ →</a>
+        </div>
+
+        <div class="contact-info-card reveal">
+          <div class="contact-info-head">⚡ Quick links</div>
+          <div class="contact-info-body">
+            {% if user.is_authenticated %}
+            <div class="cinfo-row">
+              <div class="cinfo-icon">📦</div>
+              <div>
+                <div class="cinfo-label">Track your orders</div>
+                <div class="cinfo-val"><a href="{% url 'my_orders' %}">View My Orders →</a></div>
+              </div>
+            </div>
+            <div class="cinfo-row">
+              <div class="cinfo-icon">💬</div>
+              <div>
+                <div class="cinfo-label">Message a seller</div>
+                <div class="cinfo-val"><a href="{% url 'inbox' %}">Open Inbox →</a></div>
+              </div>
+            </div>
+            {% endif %}
+            <div class="cinfo-row">
+              <div class="cinfo-icon">🌿</div>
+              <div>
+                <div class="cinfo-label">Our mission</div>
+                <div class="cinfo-val"><a href="{% url 'sustainability' %}">Sustainability →</a></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- end sidebar -->
+    </div><!-- end layout -->
+  </div>
+</div>
+
+<script>
+const SUBJECT_MAP = {
+  'General Question':    'general',
+  'Problem with my order': 'order',
+  'Problem with a listing': 'listing',
+  'Account issue':       'account',
+  'Report a user':       'report',
+  'Feature request':     'feature',
+  'Partnership inquiry': 'partnership',
+  'Other':               'other',
+};
+
+async function submitContact() {
+  const firstName = document.getElementById('cfFirstName').value.trim();
+  const lastName  = document.getElementById('cfLastName').value.trim();
+  const email     = document.getElementById('cfEmail').value.trim();
+  const subjectRaw = document.getElementById('cfSubject').value;
+  const message   = document.getElementById('cfMessage').value.trim();
+
+  if (!firstName) { alert('Please enter your first name.'); document.getElementById('cfFirstName').focus(); return; }
+  if (!email || !email.includes('@')) { alert('Please enter a valid email address.'); document.getElementById('cfEmail').focus(); return; }
+  if (!subjectRaw) { alert('Please select a subject.'); document.getElementById('cfSubject').focus(); return; }
+  if (!message || message.length < 10) { alert('Please write a message (at least 10 characters).'); document.getElementById('cfMessage').focus(); return; }
+
+  const btn = document.querySelector('.contact-submit');
+  btn.disabled = true;
+  btn.textContent = '⏳ Sending…';
+
+  try {
+    const resp = await fetch('{% url "contact" %}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': '{{ csrf_token }}',
+      },
+      body: JSON.stringify({
+        first_name: firstName,
+        last_name:  lastName,
+        email:      email,
+        subject:    SUBJECT_MAP[subjectRaw] || 'general',
+        message:    message,
+      }),
+    });
+    const data = await resp.json();
+    if (data.ok) {
+      document.getElementById('contactFormWrap').style.display = 'none';
+      document.getElementById('contactSuccess').style.display  = 'block';
+    } else {
+      alert('Something went wrong: ' + (data.error || 'Unknown error'));
+      btn.disabled = false;
+      btn.textContent = '📨 Send Message';
+    }
+  } catch (e) {
+    alert('Network error. Please try again.');
+    btn.disabled = false;
+    btn.textContent = '📨 Send Message';
+  }
+}
+</script>
+{% endblock %}

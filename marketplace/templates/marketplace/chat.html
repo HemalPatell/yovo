@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Chat with {{ other_user.username }} — YOVO{% endblock %}
+
+{% block extra_css %}
+<style>
+.chat-page { height:100vh; display:flex; flex-direction:column; padding-top:var(--nav-h); background:var(--bg); }
+.chat-wrap {
+  flex:1; display:flex; max-width:860px; width:100%;
+  margin:0 auto; height:calc(100vh - var(--nav-h));
+  flex-direction:column;
+  border-left:1px solid var(--border); border-right:1px solid var(--border);
+  background:var(--bg-card);
+}
+
+/* Header */
+.chat-header {
+  display:flex; align-items:center; gap:14px;
+  padding:12px 20px; border-bottom:1px solid var(--border);
+  background:var(--bg-card); flex-shrink:0;
+}
+.chat-back { width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--bg-2);border:1px solid var(--border);color:var(--text-2);font-size:1.1rem;text-decoration:none;transition:all var(--transition);flex-shrink:0; }
+.chat-back:hover { background:var(--border); }
+.chat-other { display:flex;align-items:center;gap:10px;flex:1;min-width:0; }
+.chat-av { width:40px;height:40px;border-radius:50%;background:var(--grad-accent);color:#fff;font-weight:700;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+.chat-other-name { font-weight:700;font-size:0.9rem; }
+.chat-other-sub  { font-size:0.72rem;color:var(--text-3); }
+.chat-item-pill {
+  display:flex;align-items:center;gap:8px;
+  background:var(--bg-2);border:1px solid var(--border);
+  border-radius:var(--radius);padding:7px 12px;
+  text-decoration:none;color:var(--text);font-size:0.78rem;
+  transition:all var(--transition);flex-shrink:0;
+}
+.chat-item-pill:hover { border-color:var(--accent);color:var(--accent); }
+.chat-item-pill strong { display:block;font-size:0.82rem; }
+.chat-item-pill span   { color:var(--accent);font-weight:700; }
+
+/* Messages */
+.chat-messages {
+  flex:1; overflow-y:auto; padding:20px;
+  display:flex; flex-direction:column; gap:4px;
+  scroll-behavior:smooth;
+}
+.chat-messages::-webkit-scrollbar { width:4px; }
+.chat-messages::-webkit-scrollbar-thumb { background:var(--border);border-radius:4px; }
+
+.msg-group { display:flex;flex-direction:column; margin-bottom:2px; }
+.msg-group.sent  { align-items:flex-end; }
+.msg-group.recv  { align-items:flex-start; }
+
+.msg-sender { font-size:0.7rem;color:var(--text-3);margin-bottom:3px;padding:0 4px; }
+
+.msg-row { display:flex;align-items:flex-end;gap:6px; }
+.msg-group.sent  .msg-row { flex-direction:row-reverse; }
+
+.msg-bubble {
+  max-width:68%; padding:9px 13px;
+  border-radius:18px; font-size:0.875rem; line-height:1.55;
+  word-break:break-word; position:relative;
+  animation:bubbleIn 0.2s ease;
+}
+@keyframes bubbleIn { from{opacity:0;transform:scale(0.95) translateY(4px)} to{opacity:1;transform:scale(1) translateY(0)} }
+.msg-group.sent .msg-bubble  { background:var(--grad-accent);color:#fff;border-bottom-right-radius:4px; }
+.msg-group.recv .msg-bubble  { background:var(--bg-2);color:var(--text);border:1px solid var(--border);border-bottom-left-radius:4px; }
+.msg-bubble.is-deleted        { background:var(--bg-2)!important;color:var(--text-3)!important;font-style:italic;border:1px dashed var(--border)!important; }
+
+/* Message actions (hover) */
+.msg-actions {
+  display:none; flex-direction:column; gap:3px;
+  flex-shrink:0;
+}
+.msg-row:hover .msg-actions { display:flex; }
+.msg-action-btn {
+  width:26px;height:26px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--border);background:var(--bg-card);
+  font-size:0.7rem;cursor:pointer;
+  transition:all var(--transition);color:var(--text-2);
+}
+.msg-action-btn:hover { border-color:var(--accent);color:var(--accent);background:rgba(200,119,58,0.08); }
+.msg-action-btn.del-btn:hover { border-color:var(--danger);color:var(--danger);background:rgba(200,57,58,0.08); }
+
+.msg-meta { font-size:0.67rem;color:var(--text-3);margin-top:3px;padding:0 4px; }
+.msg-group.sent .msg-meta { text-align:right; }
+.edited-tag { font-size:0.62rem;color:var(--text-3);font-style:italic; }
+.sent-tag  { font-size:0.62rem;color:var(--text-3); }
+.seen-tag  { font-size:0.62rem;color:var(--accent);font-weight:600; }
+
+/* Edit inline input */
+.msg-edit-wrap { display:none; margin-top:4px; }
+.msg-edit-wrap.open { display:flex; gap:6px; }
+.msg-edit-input {
+  flex:1;font-family:var(--font-body);font-size:0.875rem;
+  border:1.5px solid var(--accent);border-radius:var(--radius-sm);
+  padding:6px 10px;background:var(--bg-card);color:var(--text);outline:none;
+}
+.msg-edit-save { background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);padding:6px 12px;font-size:0.8rem;font-weight:600;cursor:pointer; }
+.msg-edit-cancel { background:var(--bg-2);color:var(--text-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 10px;font-size:0.8rem;cursor:pointer; }
+
+/* Empty */
+.chat-empty { flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:var(--text-3);padding:60px 32px;gap:12px; }
+.chat-empty-icon { font-size:3.5rem; }
+
+/* Input bar */
+.chat-input-area { border-top:1px solid var(--border);padding:12px 20px;background:var(--bg-card);flex-shrink:0; }
+.chat-input-form {
+  display:flex;align-items:center;gap:8px;
+  background:var(--bg-2);border:1.5px solid var(--border);
+  border-radius:999px;padding:5px 5px 5px 16px;
+  transition:border-color var(--transition);
+}
+.chat-input-form:focus-within { border-color:var(--accent); }
+.chat-text-input { flex:1;font-family:var(--font-body);font-size:0.875rem;border:none;background:transparent;color:var(--text);outline:none;padding:6px 0; }
+.chat-text-input::placeholder { color:var(--text-3); }
+.chat-send-btn { width:38px;height:38px;border-radius:50%;background:var(--grad-accent);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all var(--transition-spring); }
+.chat-send-btn:hover { transform:scale(1.08);box-shadow:var(--shadow-glow); }
+.chat-send-btn:disabled { opacity:0.5;cursor:not-allowed;transform:none; }
+.ws-status { text-align:center;font-size:0.7rem;color:var(--text-3);padding:4px 0 0; }
+.ws-status.ok  { color:var(--success); }
+.ws-status.err { color:var(--danger); }
+
+@media (max-width:600px) { .chat-item-pill{display:none} .msg-bubble{max-width:85%} }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chat-page">
+  <div class="chat-wrap">
+
+    <!-- Header -->
+    <div class="chat-header">
+      <a href="{% url 'inbox' %}" class="chat-back">←</a>
+      <div class="chat-other">
+        <div class="chat-av">{{ other_user.username|first|upper }}</div>
+        <div>
+          <div class="chat-other-name">{{ other_user.get_full_name|default:other_user.username }}</div>
+          <div class="chat-other-sub">@{{ other_user.username }}</div>
+        </div>
+      </div>
+      <a href="{% url 'item_detail' item.pk %}" class="chat-item-pill">
+        <span style="font-size:1.2rem">{% if item.category == 'clothes' %}👗{% else %}📚{% endif %}</span>
+        <div>
+          <strong>{{ item.title|truncatechars:28 }}</strong>
+          <span>₹{{ item.price }}</span>
+        </div>
+      </a>
+    </div>
+
+    <!-- Messages -->
+    <div class="chat-messages" id="chatMessages">
+      {% if chat_messages %}
+        {% for msg in chat_messages %}
+        <div class="msg-group {% if msg.sender == request.user %}sent{% else %}recv{% endif %}" id="msg-{{ msg.pk }}">
+          {% if msg.sender != request.user %}
+          <div class="msg-sender">{{ msg.sender.get_full_name|default:msg.sender.username }}</div>
+          {% endif %}
+
+          <div class="msg-row">
+            {% if msg.sender == request.user and not msg.is_deleted %}
+            <!-- Actions (left side for sent messages) -->
+            <div class="msg-actions">
+              <button class="msg-action-btn" onclick="startEdit({{ msg.pk }})" title="Edit">✏️</button>
+              <button class="msg-action-btn del-btn" onclick="deleteMsg({{ msg.pk }})" title="Delete">🗑</button>
+            </div>
+            {% endif %}
+
+            <div class="msg-bubble {% if msg.is_deleted %}is-deleted{% endif %}" id="bubble-{{ msg.pk }}">
+              {{ msg.content }}
+            </div>
+          </div>
+
+          <!-- Inline edit box -->
+          {% if msg.sender == request.user and not msg.is_deleted %}
+          <div class="msg-edit-wrap" id="edit-wrap-{{ msg.pk }}">
+            <input type="text" class="msg-edit-input" id="edit-input-{{ msg.pk }}" value="{{ msg.content }}" onkeydown="editKeydown(event, {{ msg.pk }})" />
+            <button class="msg-edit-save" onclick="saveEdit({{ msg.pk }})">Save</button>
+            <button class="msg-edit-cancel" onclick="cancelEdit({{ msg.pk }})">Cancel</button>
+          </div>
+          {% endif %}
+
+          <div class="msg-meta">
+            {{ msg.timestamp|date:"g:i A" }}
+            {% if msg.sender == request.user and not msg.is_deleted %}
+              <span class="{% if msg.is_read %}seen-tag{% else %}sent-tag{% endif %}">
+                &nbsp;&#183; {% if msg.is_read %}Seen &#10003;&#10003;{% else %}Sent &#10003;{% endif %}
+              </span>
+            {% endif %}
+            {% if msg.edited_at %}<span class="edited-tag"> &middot; edited</span>{% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="chat-empty">
+          <div class="chat-empty-icon">💬</div>
+          <h3 style="color:var(--text-2);">Start the conversation</h3>
+          <p>Ask about condition, size, availability, or arrange a meetup.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Input -->
+    <div class="chat-input-area">
+      <!-- WebSocket form -->
+      <div class="chat-input-form" id="wsForm">
+        <input type="text" id="chatInput" class="chat-text-input" placeholder="Type a message…" autocomplete="off" maxlength="1000" />
+        <button type="button" id="sendBtn" class="chat-send-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
+      <!-- POST fallback -->
+      <form method="POST" action="{% url 'chat' item.pk other_user.pk %}" id="postForm" style="display:none;">
+        {% csrf_token %}
+        <div class="chat-input-form">
+          <input type="text" name="content" class="chat-text-input" placeholder="Type a message…" autocomplete="off" maxlength="1000" required />
+          <button type="submit" class="chat-send-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          </button>
+        </div>
+      </form>
+      <div class="ws-status" id="wsStatus">Connecting…</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* Django template variables — read by chat.js */
+  const ROOM_NAME       = "{{ room_name }}";
+  const CURRENT_USER_ID = {{ request.user.pk }};
+  const RECEIVER_ID     = {{ other_user.pk }};
+  const ITEM_ID         = {{ item.pk }};
+  const CSRF_TOKEN      = "{{ csrf_token }}";
+</script>
+<script src="{% static 'js/chat.js' %}"></script>
+{% endblock %}

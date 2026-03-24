@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}{{ profile_user.username }} — YOVO{% endblock %}
+{% block content %}
+<div class="profile-page">
+  <div class="container">
+    <div class="profile-header reveal">
+      <div class="avatar-large">{{ profile_user.username|first|upper }}</div>
+      <div class="profile-meta">
+        <h1>{{ profile_user.get_full_name|default:profile_user.username }}</h1>
+        <p>@{{ profile_user.username }}</p>
+        {% if profile_user.profile.location %}
+        <p>📍 {{ profile_user.profile.location }}</p>
+        {% endif %}
+        {% if profile_user.profile.bio %}
+        <p class="profile-bio">{{ profile_user.profile.bio }}</p>
+        {% endif %}
+        <p>Member since {{ profile_user.date_joined|date:"M Y" }}</p>
+      </div>
+    </div>
+
+    <div class="profile-listings">
+      <h2 class="section-title reveal">{{ items.count }} Listing{{ items.count|pluralize }}</h2>
+      {% if items %}
+      <div class="items-grid">
+        {% for item in items %}
+        <article class="item-card reveal">
+          <a href="{% url 'item_detail' item.pk %}" class="item-card-link">
+            <div class="item-image-wrap">
+              {% if item.image %}
+              <img src="{{ item.image.url }}" alt="{{ item.title }}" class="item-image" loading="lazy" />
+              {% else %}
+              <div class="item-image-placeholder">{% if item.category == 'clothes' %}👗{% elif item.category == 'accessories' %}👜{% else %}📚{% endif %}</div>
+              {% endif %}
+            </div>
+            <div class="item-body">
+              <h3 class="item-title">{{ item.title }}</h3>
+            </div>
+          </a>
+          <div class="item-footer">
+            <span class="item-price">₹{{ item.price }}</span>
+            {% if user.is_authenticated and user != item.seller %}
+            <a href="{% url 'add_to_cart' item.pk %}" class="btn btn-sm btn-primary">Add to Cart</a>
+            {% endif %}
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <p>No active listings from this seller.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

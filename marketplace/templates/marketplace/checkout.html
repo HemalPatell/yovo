@@ -1,0 +1,388 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Checkout — YOVO{% endblock %}
+
+{% block extra_css %}
+<style>
+.checkout-page { padding: 100px 0 80px; min-height: 100vh; background: var(--bg); }
+.checkout-page .page-title { font-size: 2rem; margin-bottom: 8px; }
+.checkout-page .page-sub   { color: var(--text-2); margin-bottom: 36px; }
+.checkout-layout { display:grid; grid-template-columns:1fr 380px; gap:28px; align-items:start; }
+.step-card { background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm);margin-bottom:20px; }
+.step-card:last-child { margin-bottom:0; }
+.step-header { display:flex;align-items:center;gap:14px;padding:18px 24px;border-bottom:1px solid var(--border);background:var(--bg); }
+.step-num { width:32px;height:32px;border-radius:50%;background:var(--grad-accent);color:#fff;font-weight:700;font-size:.85rem;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+.step-header h2 { font-size:1rem;font-family:var(--font-body);font-weight:700; }
+.step-body { padding:24px; }
+.step-body .form-group { margin-bottom:18px; }
+.step-body .form-group:last-child { margin-bottom:0; }
+.form-row-2 { display:grid;grid-template-columns:1fr 1fr;gap:16px; }
+.payment-options { display:flex;flex-direction:column;gap:12px; }
+.payment-option { border:2px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:all var(--transition);overflow:hidden; }
+.payment-option:hover { border-color:var(--accent); }
+.payment-option.selected { border-color:var(--accent);box-shadow:0 0 0 3px rgba(200,119,58,.12); }
+.payment-option-label { display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;user-select:none; }
+.payment-radio-custom { width:20px;height:20px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all var(--transition); }
+.payment-option.selected .payment-radio-custom { border-color:var(--accent);background:var(--accent); }
+.payment-option.selected .payment-radio-custom::after { content:'';width:8px;height:8px;border-radius:50%;background:#fff; }
+.payment-icon { font-size:1.5rem;flex-shrink:0; }
+.payment-text { flex:1; }
+.payment-text strong { display:block;font-size:.9rem;margin-bottom:2px; }
+.payment-text span { font-size:.78rem;color:var(--text-3); }
+.payment-badge { font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:999px;background:rgba(58,156,104,.12);color:#2d7a52;border:1px solid rgba(58,156,104,.2); }
+.payment-form-section { display:none;padding:0 20px 18px;border-top:1px solid var(--border);background:var(--bg-2);animation:fadeSlide .25s ease; }
+.payment-form-section.open { display:block; }
+@keyframes fadeSlide { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+.payment-form-section .form-group { margin-top:16px;margin-bottom:0; }
+.card-grid { display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px; }
+.card-grid .full { grid-column:1/-1; }
+.cod-info { display:flex;gap:12px;align-items:flex-start;background:rgba(200,119,58,.08);border:1px solid rgba(200,119,58,.2);border-radius:var(--radius);padding:14px 16px;margin-top:16px;font-size:.85rem;color:var(--text-2); }
+.cod-info-icon { font-size:1.4rem;flex-shrink:0; }
+.upi-wrap { display:flex;gap:10px;margin-top:16px; }
+.upi-verify-btn { white-space:nowrap;flex-shrink:0;background:var(--bg-card);border:1.5px solid var(--accent);color:var(--accent);border-radius:var(--radius-sm);padding:10px 16px;font-size:.85rem;font-weight:600;cursor:pointer;transition:all var(--transition); }
+.upi-verify-btn:hover { background:var(--accent);color:#fff; }
+.order-summary-card { background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-md);position:sticky;top:90px; }
+.summary-top { padding:20px 24px;border-bottom:1px solid var(--border);background:var(--bg); }
+.summary-top h2 { font-size:1rem;font-family:var(--font-body);font-weight:700; }
+.summary-items { padding:16px 24px; }
+.s-item { display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:.875rem; }
+.s-item:last-child { border-bottom:none; }
+.s-item-img { width:44px;height:44px;border-radius:var(--radius-sm);overflow:hidden;background:var(--bg-2);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0; }
+.s-item-img img { width:100%;height:100%;object-fit:cover; }
+.s-item-info { flex:1;min-width:0; }
+.s-item-title { font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.s-item-qty { font-size:.75rem;color:var(--text-3); }
+.s-item-price { font-weight:700;font-family:var(--font-display);color:var(--accent);flex-shrink:0; }
+.summary-totals { padding:16px 24px;border-top:1px solid var(--border); }
+.s-row { display:flex;justify-content:space-between;font-size:.875rem;color:var(--text-2);margin-bottom:10px; }
+.s-row:last-child { margin-bottom:0; }
+.s-total { font-size:1.1rem;font-weight:700;color:var(--text);border-top:2px solid var(--border);padding-top:14px;margin-top:6px; }
+.commission-row { background:rgba(200,119,58,.06);border:1px solid rgba(200,119,58,.15);border-radius:8px;padding:10px 14px;margin:10px 0;display:flex;justify-content:space-between;font-size:.875rem;color:var(--text-2); }
+.commission-row span:last-child { font-weight:700;color:var(--accent); }
+.commission-note { font-size:.7rem;color:var(--text-3);margin-bottom:10px;line-height:1.55;padding:0 2px; }
+.summary-cta { padding:16px 24px; }
+.secure-badges { display:flex;justify-content:center;gap:14px;flex-wrap:wrap;padding:14px 24px;border-top:1px solid var(--border);background:var(--bg); }
+.secure-badge { display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--text-3); }
+@media(max-width:860px){.checkout-layout{grid-template-columns:1fr}.order-summary-card{position:static}}
+@media(max-width:500px){.form-row-2{grid-template-columns:1fr}.card-grid{grid-template-columns:1fr}.card-grid .full{grid-column:1}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="checkout-page">
+  <div class="container">
+    <h1 class="page-title reveal">Checkout</h1>
+    <p class="page-sub reveal">Complete your order securely</p>
+
+    <div class="checkout-layout">
+      <div>
+        <form method="POST" id="checkoutForm" action="{% url 'checkout' %}">
+          {% csrf_token %}
+          <input type="hidden" name="payment_method" id="hPaymentMethod" value="cod" />
+          <input type="hidden" name="payment_ref"    id="hPaymentRef"    value="" />
+
+          <!-- Step 1: Delivery -->
+          <div class="step-card reveal">
+            <div class="step-header"><div class="step-num">1</div><h2>Delivery Details</h2></div>
+            <div class="step-body">
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label class="form-label">First Name *</label>
+                  <input type="text" class="form-input" name="first_name" id="firstName" value="{{ user.first_name }}" placeholder="First name" required />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Last Name *</label>
+                  <input type="text" class="form-input" name="last_name" id="lastName" value="{{ user.last_name }}" placeholder="Last name" required />
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Email Address *</label>
+                <input type="email" class="form-input" name="email" id="email" value="{{ user.email }}" placeholder="your@email.com" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Phone Number *</label>
+                <input type="tel" class="form-input" name="phone" id="phone" value="{% if profile %}{{ profile.phone }}{% endif %}" placeholder="+91 98765 43210" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Delivery Address *</label>
+                <input type="text" class="form-input" name="address" id="address" value="{% if profile %}{{ profile.address|truncatechars:80 }}{% endif %}" placeholder="House / Flat No., Street Name" required />
+              </div>
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label class="form-label">City *</label>
+                  <input type="text" class="form-input" name="city" id="city" value="{% if profile %}{{ profile.location }}{% endif %}" placeholder="City" required />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">PIN Code *</label>
+                  <input type="text" class="form-input" name="pin" id="pin" placeholder="400001" maxlength="6" required />
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">State *</label>
+                <select class="form-input" name="state" id="state" required>
+                  <option value="">Select State</option>
+                  <option>Maharashtra</option><option>Delhi</option><option>Karnataka</option>
+                  <option>Tamil Nadu</option><option selected>Gujarat</option><option>West Bengal</option>
+                  <option>Rajasthan</option><option>Telangana</option><option>Uttar Pradesh</option>
+                  <option>Kerala</option><option>Madhya Pradesh</option><option>Punjab</option><option>Other</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2: Payment -->
+          <div class="step-card reveal">
+            <div class="step-header"><div class="step-num">2</div><h2>Payment Method</h2></div>
+            <div class="step-body">
+              <div class="payment-options">
+
+                <!-- Credit / Debit Card -->
+                <div class="payment-option" id="opt-card" onclick="selectPayment('card')">
+                  <label class="payment-option-label">
+                    <div class="payment-radio-custom" id="radio-card"></div>
+                    <span class="payment-icon">💳</span>
+                    <div class="payment-text">
+                      <strong>Credit / Debit Card</strong>
+                      <span>Visa · Mastercard · Maestro · RuPay</span>
+                    </div>
+                    <span style="font-size:1.3rem;flex-shrink:0;">🏦</span>
+                  </label>
+                  <div class="payment-form-section" id="form-card">
+                    <div class="card-grid">
+                      <div class="form-group full">
+                        <label class="form-label">Card Number *</label>
+                        <input type="text" class="form-input" id="cardNumber" placeholder="1234  5678  9012  3456" maxlength="19" oninput="formatCard(this)" autocomplete="cc-number" inputmode="numeric" />
+                      </div>
+                      <div class="form-group full">
+                        <label class="form-label">Cardholder Name *</label>
+                        <input type="text" class="form-input" id="cardName" placeholder="Name as printed on card" autocomplete="cc-name" />
+                      </div>
+                      <div class="form-group">
+                        <label class="form-label">Expiry (MM / YY) *</label>
+                        <input type="text" class="form-input" id="cardExpiry" placeholder="MM / YY" maxlength="7" oninput="formatExpiry(this)" autocomplete="cc-exp" />
+                      </div>
+                      <div class="form-group">
+                        <label class="form-label">CVV *</label>
+                        <input type="password" class="form-input" id="cardCvv" placeholder="•••" maxlength="4" autocomplete="cc-csc" />
+                      </div>
+                    </div>
+                    <p style="font-size:.75rem;color:var(--text-3);margin-top:10px;">🔒 Card details are encrypted. YOVO does not store your card data.</p>
+                  </div>
+                </div>
+
+                <!-- UPI -->
+                <div class="payment-option" id="opt-upi" onclick="selectPayment('upi')">
+                  <label class="payment-option-label">
+                    <div class="payment-radio-custom" id="radio-upi"></div>
+                    <span class="payment-icon">📲</span>
+                    <div class="payment-text">
+                      <strong>UPI</strong>
+                      <span>Google Pay · PhonePe · Paytm · BHIM</span>
+                    </div>
+                    <span class="payment-badge">Instant</span>
+                  </label>
+                  <div class="payment-form-section" id="form-upi">
+                    <div class="form-group" style="margin-top:16px;">
+                      <label class="form-label">UPI ID *</label>
+                      <div class="upi-wrap">
+                        <input type="text" class="form-input" id="upiId" placeholder="yourname@okaxis" style="flex:1;" oninput="document.getElementById('hPaymentRef').value=this.value" />
+                        <button type="button" class="upi-verify-btn" onclick="verifyUPI()">Verify</button>
+                      </div>
+                      <p id="upiMsg" style="font-size:.78rem;margin-top:6px;color:var(--text-3);"></p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Cash on Delivery -->
+                <div class="payment-option selected" id="opt-cod" onclick="selectPayment('cod')">
+                  <label class="payment-option-label">
+                    <div class="payment-radio-custom" id="radio-cod"></div>
+                    <span class="payment-icon">💵</span>
+                    <div class="payment-text">
+                      <strong>Cash on Delivery (COD)</strong>
+                      <span>Pay in cash when your order arrives</span>
+                    </div>
+                  </label>
+                  <div class="payment-form-section open" id="form-cod">
+                    <div class="cod-info">
+                      <span class="cod-info-icon">📦</span>
+                      <div>Keep exact cash ready at delivery. Coordinate timing with the seller via chat.</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- NEFT -->
+                <div class="payment-option" id="opt-neft" onclick="selectPayment('neft')">
+                  <label class="payment-option-label">
+                    <div class="payment-radio-custom" id="radio-neft"></div>
+                    <span class="payment-icon">🏦</span>
+                    <div class="payment-text">
+                      <strong>Bank Transfer / NEFT</strong>
+                      <span>Transfer directly to seller's bank account</span>
+                    </div>
+                  </label>
+                  <div class="payment-form-section" id="form-neft">
+                    <div class="cod-info" style="margin-top:16px;">
+                      <span class="cod-info-icon">💡</span>
+                      <div>Seller's bank details will be shared via chat after your order is placed.</div>
+                    </div>
+                    <div class="form-group" style="margin-top:12px;">
+                      <label class="form-label">Transaction Reference (optional)</label>
+                      <input type="text" class="form-input" id="neftRef" placeholder="UTR / Reference number" oninput="document.getElementById('hPaymentRef').value=this.value" />
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <button type="button" class="btn btn-primary btn-block btn-lg reveal" onclick="submitOrder()" id="placeOrderBtn">
+            🔒 Place Order
+          </button>
+          <p style="text-align:center;font-size:.75rem;color:var(--text-3);margin-top:10px;">By placing this order you agree to our Terms of Service.</p>
+        </form>
+      </div>
+
+      <!-- Order Summary Sidebar -->
+      <div>
+        <div class="order-summary-card reveal">
+          <div class="summary-top"><h2>🛒 Order Summary</h2></div>
+          <div class="summary-items">
+            {% for ci in cart.cart_items.all %}
+            <div class="s-item">
+              <div class="s-item-img">
+                {% if ci.item.image %}<img src="{{ ci.item.image.url }}" alt="{{ ci.item.title }}" />
+                {% elif ci.item.category == 'clothes' %}👗{% else %}📚{% endif %}
+              </div>
+              <div class="s-item-info">
+                <div class="s-item-title">{{ ci.item.title }}</div>
+                <div class="s-item-qty">Qty: {{ ci.quantity }} · {{ ci.item.seller.get_full_name|default:ci.item.seller.username }}</div>
+              </div>
+              <div class="s-item-price">₹{{ ci.get_subtotal }}</div>
+            </div>
+            {% empty %}
+            <p style="color:var(--text-3);font-size:.875rem;text-align:center;padding:16px 0;">Cart is empty.</p>
+            {% endfor %}
+          </div>
+
+          <div class="summary-totals">
+            <div class="s-row"><span>Items Subtotal ({{ cart.get_item_count }})</span><span>₹{{ cart.get_total }}</span></div>
+            <div class="s-row"><span>Delivery Fee</span><span style="color:var(--success);font-weight:600;">FREE</span></div>
+            <div class="commission-row">
+              <span>🏛 Platform Fee (12%)</span>
+              <span>₹<span id="commissionVal">0.00</span></span>
+            </div>
+            <p class="commission-note">Platform fee supports secure transactions, buyer protection &amp; 24/7 support.</p>
+            <div class="s-row s-total"><span>Total Payable</span><span>₹<span id="grandTotal">{{ cart.get_total }}</span></span></div>
+          </div>
+
+          <div class="summary-cta">
+            <button type="button" class="btn btn-primary btn-block btn-lg" onclick="submitOrder()" id="summaryOrderBtn">
+              🔒 Place Order — ₹<span id="ctaTotal">{{ cart.get_total }}</span>
+            </button>
+            <p style="text-align:center;font-size:.72rem;color:var(--text-3);margin-top:8px;">Includes 12% platform fee</p>
+          </div>
+
+          <div class="secure-badges">
+            <span class="secure-badge">🔒 SSL Secured</span>
+            <span class="secure-badge">🛡 Buyer Protected</span>
+            <span class="secure-badge">✅ Verified</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// Commission calculation
+const SUBTOTAL      = parseFloat("{{ cart.get_total }}") || 0;
+const COMM_RATE     = 0.12;
+const commissionAmt = Math.round(SUBTOTAL * COMM_RATE * 100) / 100;
+const grandTotal    = Math.round((SUBTOTAL + commissionAmt) * 100) / 100;
+
+document.getElementById('commissionVal').textContent = commissionAmt.toFixed(2);
+document.getElementById('grandTotal').textContent    = grandTotal.toFixed(2);
+document.getElementById('ctaTotal').textContent      = grandTotal.toFixed(2);
+document.getElementById('placeOrderBtn').textContent = '🔒 Place Order — ₹' + grandTotal.toFixed(2);
+
+let selectedPayment = 'cod';
+
+function selectPayment(method) {
+  selectedPayment = method;
+  document.getElementById('hPaymentMethod').value = method;
+  ['card','upi','cod','neft'].forEach(m => {
+    const opt  = document.getElementById('opt-'  + m);
+    const form = document.getElementById('form-' + m);
+    if (opt)  opt.classList.toggle('selected', m === method);
+    if (form) form.classList.toggle('open',    m === method);
+  });
+}
+
+function formatCard(input) {
+  let v = input.value.replace(/\D/g,'').substring(0,16);
+  input.value = v.replace(/(.{4})/g,'$1  ').trim();
+  document.getElementById('hPaymentRef').value = 'CARD-****' + v.slice(-4);
+}
+
+function formatExpiry(input) {
+  let v = input.value.replace(/\D/g,'');
+  if (v.length >= 2) v = v.substring(0,2) + ' / ' + v.substring(2,4);
+  input.value = v;
+}
+
+function verifyUPI() {
+  const val = document.getElementById('upiId').value.trim();
+  const msg = document.getElementById('upiMsg');
+  if (!val.includes('@')) {
+    msg.textContent = '❌ Invalid UPI ID (e.g. name@okaxis)';
+    msg.style.color = 'var(--danger)'; return;
+  }
+  msg.textContent = '✅ UPI ID verified!';
+  msg.style.color = 'var(--success)';
+  document.getElementById('hPaymentRef').value = val;
+}
+
+function submitOrder() {
+  const fields = [
+    {id:'firstName',label:'First Name'},{id:'lastName',label:'Last Name'},
+    {id:'phone',label:'Phone Number'},{id:'address',label:'Delivery Address'},
+    {id:'city',label:'City'},{id:'pin',label:'PIN Code'},{id:'state',label:'State'},
+  ];
+  for (const {id, label} of fields) {
+    const el = document.getElementById(id);
+    if (!el || !el.value.trim()) {
+      el?.focus();
+      if (el) { el.style.borderColor='var(--danger)'; el.style.boxShadow='0 0 0 3px rgba(200,57,58,.12)'; }
+      alert('Please fill in: ' + label);
+      setTimeout(() => { if(el){el.style.borderColor='';el.style.boxShadow='';} }, 2500);
+      return;
+    }
+  }
+  if (selectedPayment === 'card') {
+    const num  = (document.getElementById('cardNumber')?.value||'').replace(/\s/g,'');
+    const name = (document.getElementById('cardName')?.value||'').trim();
+    const exp  = (document.getElementById('cardExpiry')?.value||'').trim();
+    const cvv  = (document.getElementById('cardCvv')?.value||'').trim();
+    if (num.length  < 16) { alert('Please enter a valid 16-digit card number.'); document.getElementById('cardNumber')?.focus(); return; }
+    if (!name)             { alert('Please enter the cardholder name.');          document.getElementById('cardName')?.focus();   return; }
+    if (exp.length  <  7) { alert('Please enter expiry date (MM / YY).');        document.getElementById('cardExpiry')?.focus(); return; }
+    if (cvv.length  <  3) { alert('Please enter your CVV.');                      document.getElementById('cardCvv')?.focus();    return; }
+    document.getElementById('hPaymentRef').value = 'CARD-****' + num.slice(-4);
+  }
+  if (selectedPayment === 'upi') {
+    const upi = (document.getElementById('upiId')?.value||'').trim();
+    if (!upi.includes('@')) { alert('Please enter a valid UPI ID.'); document.getElementById('upiId')?.focus(); return; }
+    document.getElementById('hPaymentRef').value = upi;
+  }
+  const btn = document.getElementById('placeOrderBtn');
+  btn.textContent = '⏳ Placing Order…';
+  btn.disabled = true;
+  document.getElementById('checkoutForm').submit();
+}
+
+selectPayment('cod');
+</script>
+{% endblock %}

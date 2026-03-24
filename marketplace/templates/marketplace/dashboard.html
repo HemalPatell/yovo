@@ -1,0 +1,504 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Dashboard — YOVO{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800;900&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+.db{padding-top:var(--nav-h);background:var(--bg);min-height:100vh}
+
+/* COVER */
+.db-cover{position:relative;padding:60px 0 120px;overflow:hidden}
+.db-cover-bg{position:absolute;inset:0;background:radial-gradient(ellipse 70% 100% at -5% 50%,rgba(200,119,58,0.12) 0%,transparent 55%),radial-gradient(ellipse 50% 80% at 105% 10%,rgba(200,119,58,0.07) 0%,transparent 50%),linear-gradient(180deg,var(--bg-2) 0%,var(--bg) 100%)}
+.db-cover-line{position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 0%,var(--accent) 30%,var(--accent) 70%,transparent 100%);opacity:.25}
+.db-cover-inner{max-width:1320px;margin:0 auto;padding:0 40px;position:relative;z-index:1;display:flex;align-items:flex-end;justify-content:space-between;gap:32px;flex-wrap:wrap}
+
+/* IDENTITY */
+.db-identity{display:flex;align-items:center;gap:24px}
+.db-ava-wrap{position:relative;flex-shrink:0}
+.db-ava{width:88px;height:88px;border-radius:50%;background:var(--grad-accent);display:flex;align-items:center;justify-content:center;font-family:'Cabinet Grotesk',sans-serif;font-size:2.4rem;font-weight:900;color:#fff;box-shadow:0 0 0 4px var(--bg),0 0 0 8px rgba(200,119,58,.2),0 16px 48px rgba(200,119,58,.25);animation:dbpop .6s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes dbpop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+.db-ava-ring{position:absolute;inset:-6px;border-radius:50%;border:1.5px solid rgba(200,119,58,.3);animation:dbspin 12s linear infinite}
+.db-ava-ring::after{content:'';position:absolute;top:-2px;left:50%;width:6px;height:6px;border-radius:50%;background:var(--accent);transform:translateX(-50%)}
+@keyframes dbspin{to{transform:rotate(360deg)}}
+.db-ava-status{position:absolute;bottom:4px;right:4px;width:14px;height:14px;border-radius:50%;background:#3acf80;border:2.5px solid var(--bg);box-shadow:0 0 8px rgba(58,207,128,.5)}
+.db-intro{animation:dbslide .5s .1s both}
+@keyframes dbslide{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:translateX(0)}}
+.db-eyebrow{font-size:.65rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--accent);font-family:'Cabinet Grotesk',sans-serif;margin-bottom:6px;display:block}
+.db-name{font-family:'Instrument Serif',serif;font-size:2.8rem;font-weight:400;line-height:1;color:var(--text);letter-spacing:-1px;margin-bottom:8px}
+.db-name em{font-style:italic;color:var(--accent)}
+.db-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.db-chip{font-size:.72rem;color:var(--text-3);background:var(--bg-card);border:1px solid var(--border);padding:4px 10px;border-radius:999px;font-family:'Cabinet Grotesk',sans-serif;font-weight:500}
+.db-unread{display:inline-flex;align-items:center;gap:5px;background:rgba(200,119,58,.1);border:1px solid rgba(200,119,58,.25);color:var(--accent);font-size:.72rem;font-weight:700;padding:4px 12px;border-radius:999px;text-decoration:none;font-family:'Cabinet Grotesk',sans-serif;animation:dbpulse 2.5s ease-in-out infinite}
+@keyframes dbpulse{0%,100%{box-shadow:0 0 0 0 rgba(200,119,58,.25)}50%{box-shadow:0 0 0 8px rgba(200,119,58,0)}}
+
+/* CTA */
+.db-cover-cta{display:flex;flex-direction:column;align-items:flex-end;gap:10px;animation:dbslider .5s .2s both}
+@keyframes dbslider{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
+.db-cta{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,var(--accent),#e8a96d);color:#fff;font-family:'Cabinet Grotesk',sans-serif;font-size:.9rem;font-weight:800;letter-spacing:.3px;padding:14px 28px;border-radius:14px;text-decoration:none;box-shadow:0 6px 24px rgba(200,119,58,.4),inset 0 1px 0 rgba(255,255,255,.15);transition:all .22s;position:relative;overflow:hidden}
+.db-cta::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.1) 0%,transparent 100%)}
+.db-cta:hover{transform:translateY(-3px);box-shadow:0 12px 36px rgba(200,119,58,.5)}
+.db-cta-ico{width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:1rem}
+.db-cta2{display:inline-flex;align-items:center;gap:6px;color:var(--text-3);font-size:.75rem;text-decoration:none;font-family:'Cabinet Grotesk',sans-serif;font-weight:500;transition:color .2s}
+.db-cta2:hover{color:var(--accent)}
+
+/* BODY */
+.db-body{max-width:1320px;margin:-72px auto 0;padding:0 40px 100px;position:relative;z-index:2}
+
+/* STATS */
+.db-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px}
+.db-stat{background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:24px 22px;position:relative;overflow:hidden;transition:all .3s;animation:dbup .55s both}
+.db-stat::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--sc,var(--accent));transform:scaleX(0);transform-origin:left;transition:transform .3s;border-radius:3px 3px 0 0}
+.db-stat:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+.db-stat:hover::after{transform:scaleX(1)}
+.db-stat:nth-child(1){--sc:var(--accent);animation-delay:.08s}
+.db-stat:nth-child(2){--sc:#3acf80;animation-delay:.14s}
+.db-stat:nth-child(3){--sc:#e85050;animation-delay:.20s}
+.db-stat:nth-child(4){--sc:#5080e8;animation-delay:.26s}
+@keyframes dbup{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.db-stat-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.db-stat-ico{width:42px;height:42px;border-radius:12px;background:var(--bg-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+.db-stat-tag{font-size:.62rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;padding:3px 9px;border-radius:999px;font-family:'Cabinet Grotesk',sans-serif;background:var(--bg-2);color:var(--text-3);border:1px solid var(--border)}
+.db-stat-num{font-family:'Instrument Serif',serif;font-size:3rem;font-weight:400;line-height:1;color:var(--sc,var(--accent));margin-bottom:5px;letter-spacing:-1.5px}
+.db-stat-lbl{font-size:.72rem;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.8px;font-family:'Cabinet Grotesk',sans-serif}
+
+/* LAYOUT */
+.db-layout{display:grid;grid-template-columns:1fr 360px;gap:28px;align-items:start}
+
+/* CARD */
+.db-card{background:var(--bg-card);border:1px solid var(--border);border-radius:22px;overflow:hidden;box-shadow:var(--shadow-sm);animation:dbup .55s .3s both}
+.db-card+.db-card{margin-top:24px}
+.db-card-head{display:flex;align-items:center;justify-content:space-between;padding:20px 26px;border-bottom:1px solid var(--border)}
+.db-card-title{font-family:'Cabinet Grotesk',sans-serif;font-size:1rem;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px}
+.db-dot{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.db-card-btn{font-size:.75rem;font-weight:700;color:var(--accent);background:rgba(200,119,58,.08);border:1px solid rgba(200,119,58,.18);padding:7px 15px;border-radius:10px;text-decoration:none;font-family:'Cabinet Grotesk',sans-serif;transition:all .2s;white-space:nowrap}
+.db-card-btn:hover{background:rgba(200,119,58,.15)}
+
+/* TABS */
+.db-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 26px;background:var(--bg)}
+.db-tab{padding:14px 16px;font-size:.8rem;font-weight:700;color:var(--text-3);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;font-family:'Cabinet Grotesk',sans-serif;transition:all .2s}
+.db-tab.on{color:var(--accent);border-bottom-color:var(--accent)}
+.db-pane{display:none}
+.db-pane.on{display:block}
+
+/* ITEM ROW */
+.db-item{display:grid;grid-template-columns:64px 1fr auto auto;align-items:center;gap:16px;padding:16px 26px;border-bottom:1px solid var(--border);transition:background .15s}
+.db-item:last-child{border-bottom:none}
+.db-item:hover{background:var(--bg)}
+.db-item.dim{opacity:.4}
+.db-thumb{width:62px;height:62px;border-radius:14px;overflow:hidden;background:var(--bg-2);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;border:1px solid var(--border)}
+.db-thumb img{width:100%;height:100%;object-fit:cover}
+.db-item-info{min-width:0}
+.db-item-name{font-family:'Cabinet Grotesk',sans-serif;font-weight:700;font-size:.9rem;color:var(--text);text-decoration:none;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px;transition:color .15s}
+.db-item-name:hover{color:var(--accent)}
+.db-item-sub{font-size:.72rem;color:var(--text-3);display:flex;align-items:center;gap:6px}
+.db-sep{color:var(--border-strong)}
+.db-price{font-family:'Instrument Serif',serif;font-size:1.15rem;color:var(--accent);white-space:nowrap}
+.db-price.x{text-decoration:line-through;color:var(--text-3);font-size:1rem}
+.db-acts{display:flex;gap:6px;align-items:center}
+.db-badge{display:inline-flex;align-items:center;font-size:.65rem;font-weight:800;letter-spacing:.5px;padding:3px 9px;border-radius:999px;white-space:nowrap;font-family:'Cabinet Grotesk',sans-serif}
+.db-badge-live{background:rgba(58,207,128,.1);color:#2d9e62;border:1px solid rgba(58,207,128,.25)}
+.db-badge-sold{background:rgba(232,80,80,.08);color:#c84040;border:1px solid rgba(232,80,80,.2)}
+.db-act{width:30px;height:30px;border-radius:9px;border:1px solid var(--border);background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:.78rem;text-decoration:none;color:var(--text-2);cursor:pointer;transition:all .15s}
+.db-act:hover{border-color:var(--accent);color:var(--accent);background:rgba(200,119,58,.06)}
+.db-act.kill:hover{border-color:#e85050;color:#e85050;background:rgba(232,80,80,.06)}
+.db-act.lbl{width:auto;padding:0 10px;font-size:.65rem;font-weight:800;font-family:'Cabinet Grotesk',sans-serif}
+
+/* EMPTY */
+.db-empty{padding:60px 26px;text-align:center}
+.db-empty-ico{font-size:3rem;margin-bottom:12px;opacity:.35}
+.db-empty-txt{font-size:.85rem;color:var(--text-3);margin-bottom:20px;line-height:1.7;font-family:'Cabinet Grotesk',sans-serif}
+.db-empty-cta{display:inline-flex;align-items:center;gap:6px;background:var(--grad-accent);color:#fff;font-size:.82rem;font-weight:800;padding:11px 22px;border-radius:12px;text-decoration:none;font-family:'Cabinet Grotesk',sans-serif;box-shadow:0 4px 16px rgba(200,119,58,.3);transition:all .2s}
+.db-empty-cta:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(200,119,58,.4)}
+
+/* CHAT */
+.db-chat{display:grid;grid-template-columns:46px 1fr auto;align-items:center;gap:14px;padding:15px 26px;border-bottom:1px solid var(--border);text-decoration:none;color:var(--text);transition:background .15s}
+.db-chat:last-child{border-bottom:none}
+.db-chat:hover{background:var(--bg)}
+.db-chat-av{width:44px;height:44px;border-radius:50%;background:var(--bg-2);border:1.5px solid var(--border);color:var(--accent);font-weight:900;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Cabinet Grotesk',sans-serif}
+.db-chat-name{font-weight:800;font-size:.875rem;margin-bottom:2px;font-family:'Cabinet Grotesk',sans-serif;color:var(--text)}
+.db-chat-item{font-size:.68rem;color:var(--accent);margin-bottom:3px;opacity:.85}
+.db-chat-prev{font-size:.75rem;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.db-chat-time{font-size:.65rem;color:var(--text-3);white-space:nowrap;text-align:right}
+.db-unread-dot{width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;font-size:.6rem;font-weight:900;display:flex;align-items:center;justify-content:center;margin-left:auto;margin-top:4px;box-shadow:0 0 12px rgba(200,119,58,.4);font-family:'Cabinet Grotesk',sans-serif}
+
+/* SIDEBAR */
+.db-sidebar{display:flex;flex-direction:column;gap:20px;animation:dbup .55s .4s both}
+
+/* PROFILE CARD */
+.db-profile{background:var(--bg-card);border:1px solid var(--border);border-radius:22px;overflow:hidden}
+.db-profile-banner{height:80px;background:linear-gradient(135deg,var(--accent) 0%,#e8a96d 50%,#c8773a 100%);position:relative}
+.db-profile-banner::after{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='15' fill='none' stroke='%23ffffff' stroke-width='.5' stroke-opacity='.15'/%3E%3Ccircle cx='30' cy='30' r='28' fill='none' stroke='%23ffffff' stroke-width='.5' stroke-opacity='.1'/%3E%3C/svg%3E");background-size:60px}
+.db-profile-ava-wrap{position:relative;margin:-36px 0 0 22px;width:fit-content;z-index:1}
+.db-profile-ava{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--bg-2),var(--bg-card));border:4px solid var(--bg-card);color:var(--accent);font-family:'Cabinet Grotesk',sans-serif;font-size:1.8rem;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.db-profile-info{padding:8px 22px 18px}
+.db-profile-name{font-family:'Cabinet Grotesk',sans-serif;font-size:1.1rem;font-weight:900;color:var(--text);margin-bottom:2px}
+.db-profile-user{font-size:.75rem;color:var(--text-3)}
+.db-divider{height:1px;background:var(--border);margin:0 22px 16px}
+.db-profile-form{padding:0 22px 22px;display:flex;flex-direction:column;gap:12px}
+.db-field label{display:block;font-size:.68rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--text-3);margin-bottom:5px;font-family:'Cabinet Grotesk',sans-serif}
+.db-field input,.db-field textarea,.db-field select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:11px;padding:9px 13px;color:var(--text);font-size:.82rem;font-family:'Cabinet Grotesk',sans-serif;transition:border-color .2s,box-shadow .2s;outline:none}
+.db-field input:focus,.db-field textarea:focus,.db-field select:focus{border-color:rgba(200,119,58,.45);box-shadow:0 0 0 4px rgba(200,119,58,.08)}
+.db-field textarea{resize:vertical;min-height:72px}
+.db-save{width:100%;padding:12px;background:linear-gradient(135deg,var(--accent),#e8a96d);color:#fff;font-weight:900;font-size:.85rem;border:none;border-radius:12px;cursor:pointer;font-family:'Cabinet Grotesk',sans-serif;letter-spacing:.3px;transition:all .22s;box-shadow:0 4px 16px rgba(200,119,58,.3)}
+.db-save:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(200,119,58,.45)}
+
+/* QUICK */
+.db-quick{background:var(--bg-card);border:1px solid var(--border);border-radius:22px;padding:20px 20px 18px}
+.db-quick-head{font-size:.62rem;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--text-3);font-family:'Cabinet Grotesk',sans-serif;margin-bottom:14px;padding:0 4px}
+.db-quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.db-ql{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:14px 13px;border-radius:14px;border:1.5px solid var(--border);background:var(--bg);text-decoration:none;color:var(--text);transition:all .22s;position:relative;overflow:hidden}
+.db-ql:hover{border-color:var(--accent);background:rgba(200,119,58,.04);transform:translateY(-2px);box-shadow:0 6px 20px rgba(200,119,58,.1)}
+.db-ql-ico{font-size:1.3rem;line-height:1}
+.db-ql-txt{font-size:.75rem;font-weight:800;color:var(--text-2);font-family:'Cabinet Grotesk',sans-serif;line-height:1.2}
+.db-ql-badge{position:absolute;top:8px;right:8px;background:var(--accent);color:#fff;width:17px;height:17px;border-radius:999px;font-size:.58rem;font-weight:900;display:flex;align-items:center;justify-content:center;font-family:'Cabinet Grotesk',sans-serif;box-shadow:0 2px 8px rgba(200,119,58,.4)}
+
+/* RESPONSIVE */
+@media(max-width:1100px){.db-layout{grid-template-columns:1fr}.db-sidebar{order:-1}.db-quick-grid{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:768px){.db-cover-inner,.db-body{padding-left:20px;padding-right:20px}.db-stats{grid-template-columns:repeat(2,1fr);gap:12px}.db-name{font-size:2rem}.db-ava{width:68px;height:68px;font-size:1.8rem}.db-item{grid-template-columns:52px 1fr auto;gap:12px;padding:14px 18px}.db-price{display:none}.db-quick-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.db-identity{gap:14px}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="db">
+
+<!-- COVER -->
+<div class="db-cover">
+  <div class="db-cover-bg"></div>
+  <div class="db-cover-line"></div>
+  <div class="db-cover-inner">
+    <div class="db-identity">
+      <div class="db-ava-wrap">
+        <div class="db-ava">{{ user.username|first|upper }}</div>
+        <div class="db-ava-ring"></div>
+        <div class="db-ava-status"></div>
+      </div>
+      <div class="db-intro">
+        <span class="db-eyebrow">Your Dashboard</span>
+        <h1 class="db-name">Hello, <em>{{ user.first_name|default:user.username }}</em></h1>
+        <div class="db-meta">
+          <span class="db-chip">@{{ user.username }}</span>
+          <span class="db-chip">Since {{ user.date_joined|date:"M Y" }}</span>
+          {% if unread_messages > 0 %}<a href="{% url 'inbox' %}" class="db-unread" id="db-unread-pill" data-count="{{ unread_messages }}">✉ {{ unread_messages }} unread</a>{% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="db-cover-cta">
+      <a href="{% url 'post_item' %}" class="db-cta">
+        <div class="db-cta-ico">＋</div>List New Item
+      </a>
+      <a href="{% url 'home' %}" class="db-cta2">← Browse marketplace</a>
+    </div>
+  </div>
+</div>
+
+<!-- BODY -->
+<div class="db-body">
+
+  <!-- Stats -->
+  <div class="db-stats">
+    <div class="db-stat">
+      <div class="db-stat-top"><div class="db-stat-ico">📦</div><span class="db-stat-tag">Total</span></div>
+      <div class="db-stat-num">{{ total_listings }}</div>
+      <div class="db-stat-lbl">Listings</div>
+    </div>
+    <div class="db-stat">
+      <div class="db-stat-top"><div class="db-stat-ico">🟢</div><span class="db-stat-tag" style="color:#2d9e62;background:rgba(58,207,128,.08);border-color:rgba(58,207,128,.2)">Live</span></div>
+      <div class="db-stat-num" style="--sc:#3acf80">{{ active_listings }}</div>
+      <div class="db-stat-lbl">Active Items</div>
+    </div>
+    <div class="db-stat">
+      <div class="db-stat-top"><div class="db-stat-ico">✅</div><span class="db-stat-tag" style="color:#c84040;background:rgba(232,80,80,.07);border-color:rgba(232,80,80,.18)">Sold</span></div>
+      <div class="db-stat-num" style="--sc:#e85050">{{ sold_listings }}</div>
+      <div class="db-stat-lbl">Items Sold</div>
+    </div>
+    <div class="db-stat">
+      <div class="db-stat-top"><div class="db-stat-ico">💬</div><span class="db-stat-tag" style="color:#3a60c0;background:rgba(80,128,232,.08);border-color:rgba(80,128,232,.2)">New</span></div>
+      <div class="db-stat-num" style="--sc:#5080e8" id="db-stat-unread">{{ unread_messages }}</div>
+      <div class="db-stat-lbl">Unread Msgs</div>
+    </div>
+  </div>
+
+  <!-- Layout -->
+  <div class="db-layout">
+
+    <!-- LEFT -->
+    <div>
+
+      <!-- ── Incoming Orders (Seller Notifications) ── -->
+      {% if incoming_orders %}
+      <div class="db-card" style="border-color:rgba(200,119,58,.35);animation:dbup .45s both;">
+        <div class="db-card-head" style="background:rgba(200,119,58,.04);">
+          <div class="db-card-title">
+            <div class="db-dot" style="background:var(--accent);box-shadow:0 0 8px rgba(200,119,58,.5);"></div>
+            🔔 Incoming Orders
+            {% if new_orders_count > 0 %}
+            <span style="background:var(--accent);color:#fff;font-size:.62rem;font-weight:800;padding:2px 8px;border-radius:999px;margin-left:4px;">{{ new_orders_count }} new</span>
+            {% endif %}
+          </div>
+          <a href="{% url 'seller_sales' %}" class="db-card-btn">View All Sales →</a>
+        </div>
+        {% for sale in incoming_orders %}
+        <div style="display:grid;grid-template-columns:46px 1fr auto;align-items:center;gap:14px;padding:14px 26px;border-bottom:1px solid var(--border);{% if sale.order.status == 'confirmed' %}background:rgba(200,119,58,.04);{% endif %}">
+          <!-- Item thumb -->
+          <div style="width:44px;height:44px;border-radius:10px;overflow:hidden;background:var(--bg-2);display:flex;align-items:center;justify-content:center;font-size:1rem;border:1px solid var(--border);flex-shrink:0;">
+            {% if sale.item and sale.item.image %}<img src="{{ sale.item.image.url }}" style="width:100%;height:100%;object-fit:cover;" alt="">
+            {% else %}📦{% endif %}
+          </div>
+          <!-- Info -->
+          <div>
+            <div style="font-weight:700;font-size:.875rem;margin-bottom:2px;">{{ sale.title|truncatechars:40 }}</div>
+            <div style="font-size:.72rem;color:var(--text-3);margin-bottom:4px;">
+              Buyer: <strong style="color:var(--text-2);">{{ sale.order.delivery_name|default:sale.order.buyer.username }}</strong>
+              &nbsp;·&nbsp; {{ sale.order.order_id }}
+              &nbsp;·&nbsp; {{ sale.order.created_at|date:"d M, H:i" }}
+            </div>
+            <div style="font-size:.72rem;color:var(--text-3);">
+              {% if sale.order.delivery_phone %}📞 {{ sale.order.delivery_phone }} &nbsp;·&nbsp;{% endif %}
+              {% if sale.order.delivery_addr %}📍 {{ sale.order.delivery_addr|truncatechars:45 }}{% endif %}
+            </div>
+          </div>
+          <!-- Price + actions -->
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+            <div style="font-family:'Cabinet Grotesk',sans-serif;font-weight:800;color:var(--success);font-size:1rem;">₹{{ sale.get_subtotal }}</div>
+            <div style="font-size:.68rem;color:var(--accent);">+₹{{ sale.order.commission_fee }} fee</div>
+            <div style="display:flex;gap:5px;">
+              <a href="{% url 'order_detail' sale.order.order_id %}" class="db-act" title="View Order">📋</a>
+              {% if sale.item %}
+              <a href="{% url 'chat' sale.item.pk sale.order.buyer.pk %}" class="db-act" title="Chat Buyer">💬</a>
+              {% endif %}
+            </div>
+            {% if sale.order.status == 'confirmed' %}
+            <span style="font-size:.6rem;font-weight:800;color:var(--accent);background:rgba(200,119,58,.1);border:1px solid rgba(200,119,58,.25);padding:2px 7px;border-radius:999px;">NEW</span>
+            {% else %}
+            <span style="font-size:.6rem;font-weight:700;color:var(--text-3);">{{ sale.order.get_status_display }}</span>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Listings -->
+      <div class="db-card">
+        <div class="db-card-head">
+          <div class="db-card-title"><div class="db-dot"></div>My Listings</div>
+          <a href="{% url 'post_item' %}" class="db-card-btn">+ Add Item</a>
+        </div>
+        <div class="db-tabs">
+          <button class="db-tab on" onclick="dbTab(event,'t-all')">All ({{ total_listings }})</button>
+          <button class="db-tab" onclick="dbTab(event,'t-live')">Active ({{ active_listings }})</button>
+          <button class="db-tab" onclick="dbTab(event,'t-sold')">Sold ({{ sold_listings }})</button>
+        </div>
+
+        <div class="db-pane on" id="t-all">
+          {% if my_items %}
+            {% for item in my_items %}
+            <div class="db-item {% if item.is_sold %}dim{% endif %}">
+              <div class="db-thumb">{% if item.image %}<img src="{{ item.image.url }}" alt="">{% elif item.category == 'clothes' %}👗{% else %}📚{% endif %}</div>
+              <div class="db-item-info">
+                <a href="{% url 'item_detail' item.pk %}" class="db-item-name">{{ item.title }}</a>
+                <div class="db-item-sub"><span>{{ item.get_category_display }}</span><span class="db-sep">·</span><span>{{ item.get_location_display }}</span><span class="db-sep">·</span><span>{{ item.created_at|timesince }} ago</span></div>
+              </div>
+              <div class="db-price {% if item.is_sold %}x{% endif %}">₹{{ item.price }}</div>
+              <div class="db-acts">
+                {% if item.is_sold %}<span class="db-badge db-badge-sold">Sold</span>
+                {% else %}<span class="db-badge db-badge-live">Live</span><a href="{% url 'mark_sold' item.pk %}" class="db-act lbl">✓ Sold</a>{% endif %}
+                <a href="{% url 'edit_item' item.pk %}" class="db-act" title="Edit">✏</a>
+                <a href="{% url 'delete_item' item.pk %}" class="db-act kill" onclick="return confirm('Delete \'{{ item.title }}\'?')">✕</a>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="db-empty"><div class="db-empty-ico">📭</div><div class="db-empty-txt">You haven't listed anything yet.<br>Turn your unused items into cash.</div><a href="{% url 'post_item' %}" class="db-empty-cta">+ Post Your First Item</a></div>
+          {% endif %}
+        </div>
+
+        <div class="db-pane" id="t-live">
+          {% for item in my_items %}{% if not item.is_sold %}
+          <div class="db-item">
+            <div class="db-thumb">{% if item.image %}<img src="{{ item.image.url }}" alt="">{% elif item.category == 'clothes' %}👗{% else %}📚{% endif %}</div>
+            <div class="db-item-info">
+              <a href="{% url 'item_detail' item.pk %}" class="db-item-name">{{ item.title }}</a>
+              <div class="db-item-sub"><span>{{ item.get_category_display }}</span><span class="db-sep">·</span><span>{{ item.get_location_display }}</span></div>
+            </div>
+            <div class="db-price">₹{{ item.price }}</div>
+            <div class="db-acts"><span class="db-badge db-badge-live">Live</span><a href="{% url 'mark_sold' item.pk %}" class="db-act lbl">✓</a><a href="{% url 'edit_item' item.pk %}" class="db-act">✏</a><a href="{% url 'delete_item' item.pk %}" class="db-act kill" onclick="return confirm('Delete?')">✕</a></div>
+          </div>
+          {% endif %}{% endfor %}
+          {% if active_listings == 0 %}<div class="db-empty"><div class="db-empty-ico">🟢</div><div class="db-empty-txt">No active listings.</div><a href="{% url 'post_item' %}" class="db-empty-cta">+ List Something</a></div>{% endif %}
+        </div>
+
+        <div class="db-pane" id="t-sold">
+          {% for item in my_items %}{% if item.is_sold %}
+          <div class="db-item dim">
+            <div class="db-thumb">{% if item.image %}<img src="{{ item.image.url }}" alt="">{% elif item.category == 'clothes' %}👗{% else %}📚{% endif %}</div>
+            <div class="db-item-info">
+              <a href="{% url 'item_detail' item.pk %}" class="db-item-name">{{ item.title }}</a>
+              <div class="db-item-sub"><span>Sold</span><span class="db-sep">·</span><span>{{ item.created_at|timesince }} ago</span></div>
+            </div>
+            <div class="db-price x">₹{{ item.price }}</div>
+            <div class="db-acts"><span class="db-badge db-badge-sold">Sold</span><a href="{% url 'delete_item' item.pk %}" class="db-act kill" onclick="return confirm('Delete?')">✕</a></div>
+          </div>
+          {% endif %}{% endfor %}
+          {% if sold_listings == 0 %}<div class="db-empty"><div class="db-empty-ico">✅</div><div class="db-empty-txt">Nothing sold yet. Keep listing!</div></div>{% endif %}
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div class="db-card">
+        <div class="db-card-head">
+          <div class="db-card-title"><div class="db-dot" style="background:#5080e8"></div>Recent Conversations</div>
+          <a href="{% url 'inbox' %}" class="db-card-btn">View All →</a>
+        </div>
+        {% if conversation_list %}
+          {% for convo in conversation_list %}
+          <a href="{% url 'chat' convo.item.pk convo.other_user.pk %}" class="db-chat">
+            <div class="db-chat-av">{{ convo.other_user.username|first|upper }}</div>
+            <div style="min-width:0">
+              <div class="db-chat-name">{{ convo.other_user.get_full_name|default:convo.other_user.username }}</div>
+              <div class="db-chat-item">re: {{ convo.item.title }}</div>
+              <div class="db-chat-prev">{% if convo.message.sender == request.user %}You: {% endif %}{{ convo.message.content|truncatechars:52 }}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
+              <span class="db-chat-time">{{ convo.message.timestamp|timesince }} ago</span>
+              {% if convo.unread > 0 %}<span class="db-unread-dot">{{ convo.unread }}</span>{% endif %}
+            </div>
+          </a>
+          {% endfor %}
+        {% else %}
+          <div class="db-empty"><div class="db-empty-ico">✉️</div><div class="db-empty-txt">No conversations yet.<br>When buyers message you, they'll appear here.</div></div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="db-sidebar">
+      <div class="db-profile">
+        <div class="db-profile-banner"></div>
+        <div class="db-profile-ava-wrap"><div class="db-profile-ava">{{ user.username|first|upper }}</div></div>
+        <div class="db-profile-info">
+          <div class="db-profile-name">{{ user.get_full_name|default:user.username }}</div>
+          <div class="db-profile-user">@{{ user.username }}</div>
+        </div>
+        <div class="db-divider"></div>
+        <form method="POST" enctype="multipart/form-data" class="db-profile-form">
+          {% csrf_token %}
+          {% for field in profile_form %}
+          <div class="db-field">
+            <label>{{ field.label }}</label>{{ field }}
+            {% if field.errors %}<span style="color:#e85050;font-size:.7rem;margin-top:3px;display:block">{{ field.errors|join:", " }}</span>{% endif %}
+          </div>
+          {% endfor %}
+          <button type="submit" class="db-save">Save Profile</button>
+        </form>
+      </div>
+
+      <div class="db-quick">
+        <div class="db-quick-head">Quick Actions</div>
+        <div class="db-quick-grid">
+          <a href="{% url 'post_item' %}" class="db-ql"><span class="db-ql-ico">📸</span><span class="db-ql-txt">List Item</span></a>
+          <a href="{% url 'my_orders' %}" class="db-ql"><span class="db-ql-ico">📦</span><span class="db-ql-txt">My Orders</span></a>
+          <a href="{% url 'seller_sales' %}" class="db-ql" id="db-ql-sales-link"><span class="db-ql-ico">💰</span><span class="db-ql-txt">My Sales</span>{% if new_orders_count > 0 %}<span class="db-ql-badge" id="db-ql-sales-badge">{{ new_orders_count }}</span>{% endif %}</a>
+          <a href="{% url 'inbox' %}" class="db-ql"><span class="db-ql-ico">💬</span><span class="db-ql-txt">Messages</span>{% if unread_messages > 0 %}<span class="db-ql-badge" id="db-ql-msg-badge">{{ unread_messages }}</span>{% endif %}</a>
+          <a href="{% url 'edit_profile' %}" class="db-ql"><span class="db-ql-ico">✏️</span><span class="db-ql-txt">Edit Profile</span></a>
+          <a href="{% url 'cart' %}" class="db-ql"><span class="db-ql-ico">🛒</span><span class="db-ql-txt">My Cart</span></a>
+          <a href="{% url 'faq' %}" class="db-ql"><span class="db-ql-ico">❓</span><span class="db-ql-txt">Help & FAQ</span></a>
+          <a href="{% url 'user_profile' user.username %}" class="db-ql"><span class="db-ql-ico">👤</span><span class="db-ql-txt">My Profile</span></a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<script>
+/* ── Tab switcher ─────────────────────────────────────── */
+function dbTab(e, id) {
+  document.querySelectorAll('.db-tab').forEach(t => t.classList.remove('on'));
+  document.querySelectorAll('.db-pane').forEach(p => p.classList.remove('on'));
+  e.currentTarget.classList.add('on');
+  document.getElementById(id).classList.add('on');
+}
+
+/* ── Hide a badge element ─────────────────────────────── */
+function hideBadge(el) {
+  if (el) { el.style.display = 'none'; el.textContent = '0'; }
+}
+
+/* ── Update messages badges by new total ─────────────── */
+function setMsgCount(count) {
+  const stat = document.getElementById('db-stat-unread');
+  if (stat) stat.textContent = count;
+
+  const pill = document.getElementById('db-unread-pill');
+  if (pill) {
+    if (count <= 0) { pill.style.display = 'none'; }
+    else { pill.style.display = ''; pill.textContent = '✉ ' + count + ' unread'; }
+  }
+
+  const qlb = document.getElementById('db-ql-msg-badge');
+  if (qlb) {
+    if (count <= 0) qlb.style.display = 'none';
+    else { qlb.style.display = 'flex'; qlb.textContent = count; }
+  }
+
+  const nav = document.getElementById('nav-msg-badge');
+  if (nav) {
+    if (count <= 0) nav.style.display = 'none';
+    else { nav.style.display = 'flex'; nav.textContent = count; }
+  }
+}
+
+/* ── Clear sales badge instantly on click ────────────── */
+const salesLink = document.getElementById('db-ql-sales-link');
+if (salesLink) {
+  salesLink.addEventListener('click', function(e) {
+    hideBadge(document.getElementById('db-ql-sales-badge'));
+    // Also hide "new" badge in incoming orders card if present
+    document.querySelectorAll('[style*="new_orders_count"]').forEach(el => hideBadge(el));
+    // Tell server to mark all as seen (fire and forget)
+    fetch('/api/mark-sales-seen/', {
+      method: 'POST',
+      headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+    });
+  });
+}
+
+/* ── Clear messages badges when conversation clicked ─── */
+document.querySelectorAll('.db-chat').forEach(link => {
+  link.addEventListener('click', function() {
+    const dot = this.querySelector('.db-unread-dot');
+    if (dot) {
+      const count = parseInt(dot.textContent) || 1;
+      dot.remove();
+      const cur = parseInt(document.getElementById('db-stat-unread')?.textContent) || 0;
+      setMsgCount(Math.max(0, cur - count));
+    }
+  });
+});
+
+/* ── Poll server every 20s ────────────────────────────── */
+async function dbPoll() {
+  try {
+    // Poll messages
+    const mr = await fetch('/api/unread-count/');
+    if (mr.ok) { const d = await mr.json(); setMsgCount(d.count); }
+
+    // Poll sales
+    const sr = await fetch('/api/new-orders-count/');
+    if (sr.ok) {
+      const d = await sr.json();
+      const badge = document.getElementById('db-ql-sales-badge');
+      if (badge) {
+        if (d.count <= 0) badge.style.display = 'none';
+        else { badge.style.display = 'flex'; badge.textContent = d.count; }
+      }
+    }
+  } catch(e) {}
+}
+setInterval(dbPoll, 20000);
+</script>
+{% endblock %}

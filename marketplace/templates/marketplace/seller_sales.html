@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}My Sales & Earnings — YOVO{% endblock %}
+
+{% block extra_css %}
+<style>
+.sales-page { padding: 100px 0 80px; min-height: 100vh; }
+.sales-header { margin-bottom: 28px; }
+.sales-header h1 { font-size: 1.8rem; margin-bottom: 6px; }
+
+.earnings-banner {
+  background: var(--grad-hero);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.earnings-main { color: #fff; }
+.earnings-main span { font-size: 0.85rem; color: rgba(255,255,255,0.6); display: block; margin-bottom: 4px; }
+.earnings-main strong { font-family: var(--font-display); font-size: 2.8rem; font-weight: 700; color: var(--accent-2); }
+.earnings-stats { display: flex; gap: 24px; flex-wrap: wrap; margin-left: auto; }
+.e-stat { text-align: center; }
+.e-stat-num { font-family: var(--font-display); font-size: 1.6rem; font-weight: 700; color: #fff; display: block; }
+.e-stat-lbl { font-size: 0.72rem; color: rgba(255,255,255,0.5); }
+
+.sales-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); overflow: hidden;
+  box-shadow: var(--shadow-sm); margin-bottom: 14px;
+  transition: box-shadow 0.2s; position: relative;
+}
+.sales-card:hover { box-shadow: var(--shadow-md); }
+.sale-main {
+  display: grid; grid-template-columns: 56px 1fr auto;
+  align-items: center; gap: 16px; padding: 18px 22px; cursor: pointer;
+}
+.sale-img {
+  width: 54px; height: 54px; border-radius: 12px;
+  overflow: hidden; background: var(--bg-2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; flex-shrink: 0; border: 1px solid var(--border);
+}
+.sale-img img { width:100%;height:100%;object-fit:cover; }
+.sale-title { font-weight: 700; font-size: 0.92rem; color: var(--text); margin-bottom: 3px; }
+.sale-meta  { font-size: 0.75rem; color: var(--text-3); display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 5px; }
+.sale-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.sale-amount { font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; color: var(--success); }
+.sale-chevron { font-size: 0.72rem; color: var(--text-3); transition: transform 0.2s; background: var(--bg-2); border: 1px solid var(--border); padding: 3px 9px; border-radius: 7px; }
+.sales-card.open .sale-chevron { transform: rotate(180deg); background: rgba(200,119,58,.1); color: var(--accent); border-color: rgba(200,119,58,.25); }
+
+.sale-status {
+  display: inline-flex; align-items: center; font-size: 0.65rem;
+  font-weight: 800; padding: 3px 9px; border-radius: 999px; letter-spacing: 0.3px;
+}
+.status-confirmed { background:rgba(80,128,232,.1);color:#3050a8;border:1px solid rgba(80,128,232,.25); }
+.status-pending   { background:rgba(245,158,11,.1);color:#c07a00;border:1px solid rgba(245,158,11,.25); }
+.status-shipped   { background:rgba(232,133,58,.1);color:#b85a10;border:1px solid rgba(232,133,58,.25); }
+.status-delivered { background:rgba(58,207,128,.1);color:#2d7a52;border:1px solid rgba(58,207,128,.25); }
+.status-cancelled { background:rgba(232,80,80,.08);color:#c84040;border:1px solid rgba(232,80,80,.2); }
+
+.sale-expand { display: none; border-top: 1px solid var(--border); background: var(--bg); }
+.sales-card.open .sale-expand { display: block; }
+.sale-detail-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+.sale-detail-block { padding: 18px 22px; border-right: 1px solid var(--border); }
+.sale-detail-block:last-child { border-right: none; }
+.sdl { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-3); margin-bottom: 8px; }
+.sdv { font-size: 0.85rem; color: var(--text); font-weight: 500; line-height: 1.6; }
+.sdv strong { color: var(--text); font-weight: 700; display: block; margin-bottom: 2px; }
+.sdv a { color: var(--accent); text-decoration: none; font-weight: 600; }
+.sdv a:hover { text-decoration: underline; }
+
+.sale-actions {
+  padding: 14px 22px; border-top: 1px solid var(--border);
+  display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+  background: var(--bg-card);
+}
+
+.new-order-badge {
+  position: absolute; top: 0; right: 0;
+  background: var(--accent); color: #fff;
+  font-size: 0.6rem; font-weight: 800; padding: 4px 12px;
+  border-radius: 0 var(--radius-lg) 0 10px;
+  font-family: var(--font-body); letter-spacing: 0.5px;
+  animation: nbpulse 2s ease-in-out infinite;
+}
+@keyframes nbpulse {
+  0%,100% { opacity:1; } 50% { opacity:.7; }
+}
+
+.empty-sales { text-align:center; padding:60px 24px; color:var(--text-3); }
+.empty-sales-icon { font-size:3.5rem; margin-bottom:14px; }
+
+@media (max-width:700px) {
+  .sale-detail-grid { grid-template-columns: 1fr; }
+  .sale-detail-block { border-right: none; border-bottom: 1px solid var(--border); }
+  .sale-main { grid-template-columns: 48px 1fr; }
+  .sale-right { display: none; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sales-page">
+  <div class="container">
+
+    <div class="sales-header reveal">
+      <h1>💰 My Sales & Earnings</h1>
+      <p style="color:var(--text-2);">Every sale, buyer details, and delivery address — all in one place.</p>
+    </div>
+
+    <div class="earnings-banner reveal">
+      <div class="earnings-main">
+        <span>Your Earnings (after platform fee)</span>
+        <strong>₹{{ total_earned }}</strong>
+      </div>
+      <div class="earnings-stats">
+        <div class="e-stat">
+          <span class="e-stat-num">{{ sales.count }}</span>
+          <span class="e-stat-lbl">Items Sold</span>
+        </div>
+        <div class="e-stat">
+          <span class="e-stat-num" style="color:#ffb347">₹{{ total_commission }}</span>
+          <span class="e-stat-lbl">Platform Fee (12%)</span>
+        </div>
+        <div class="e-stat">
+          <span class="e-stat-num" style="color:#7fffb0">₹{{ total_buyer_paid }}</span>
+          <span class="e-stat-lbl">Buyer Paid Total</span>
+        </div>
+      </div>
+    </div>
+    <!-- Commission info banner -->
+    <div style="background:rgba(200,119,58,.07);border:1px solid rgba(200,119,58,.2);border-radius:var(--radius-lg);padding:14px 22px;margin-bottom:22px;display:flex;align-items:center;gap:14px;font-size:.875rem;color:var(--text-2);">
+      <span style="font-size:1.4rem;">🏛</span>
+      <div>
+        <strong style="color:var(--accent);">12% Platform Commission</strong> is charged to buyers on top of your listed price.
+        You receive your full listed price — YOVO earns the 12% commission from the buyer's payment.
+      </div>
+    </div>
+
+    {% if sales %}
+    <div class="reveal">
+      {% for sale in sales %}
+      <div class="sales-card{% if sale.order.status == 'confirmed' %} new{% endif %}" id="sale-{{ sale.pk }}">
+
+        {% if sale.order.status == 'confirmed' %}
+        <div class="new-order-badge">🔔 NEW ORDER</div>
+        {% endif %}
+
+        <div class="sale-main" onclick="toggleSale({{ sale.pk }})">
+          <div class="sale-img">
+            {% if sale.item and sale.item.image %}<img src="{{ sale.item.image.url }}" alt="" />
+            {% else %}📦{% endif %}
+          </div>
+          <div>
+            <div class="sale-title">{{ sale.title }}</div>
+            <div class="sale-meta">
+              <span>🛒 {{ sale.order.order_id }}</span>
+              <span>📅 {{ sale.order.created_at|date:"d M Y, H:i" }}</span>
+              <span>💳 {{ sale.order.get_payment_method_display }}</span>
+            </div>
+            <span class="sale-status status-{{ sale.order.status }}">{{ sale.order.get_status_display }}</span>
+          </div>
+          <div class="sale-right">
+            <div class="sale-amount">₹{{ sale.get_subtotal }}</div>
+            <div class="sale-chevron">▼ Details</div>
+          </div>
+        </div>
+
+        <div class="sale-expand">
+          <div class="sale-detail-grid">
+
+            <div class="sale-detail-block">
+              <div class="sdl">👤 Buyer Details</div>
+              <div class="sdv">
+                <strong>{{ sale.order.delivery_name|default:sale.order.buyer.get_full_name|default:sale.order.buyer.username }}</strong>
+                {% if sale.order.delivery_phone %}
+                  📞 <a href="tel:{{ sale.order.delivery_phone }}">{{ sale.order.delivery_phone }}</a>
+                {% endif %}
+                <span style="color:var(--text-3);font-size:0.8rem;">@{{ sale.order.buyer.username }}</span>
+              </div>
+            </div>
+
+            <div class="sale-detail-block">
+              <div class="sdl">📦 Delivery Address</div>
+              <div class="sdv">
+                {% if sale.order.delivery_addr and sale.order.delivery_addr != ', ,  - ' %}
+                  {{ sale.order.delivery_addr|linebreaksbr }}
+                {% else %}
+                  <span style="color:var(--text-3);">Buyer did not provide an address.</span>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="sale-detail-block">
+              <div class="sdl">💳 Payment & Commission</div>
+              <div class="sdv">
+                <strong>{{ sale.order.get_payment_method_display }}</strong><br>
+                {% if sale.order.payment_ref %}<span style="font-size:.8rem;color:var(--text-3);">Ref: {{ sale.order.payment_ref }}</span><br>{% endif %}
+                Qty: {{ sale.quantity }} · ₹{{ sale.price }} each<br>
+                <hr style="border:none;border-top:1px solid var(--border);margin:8px 0;">
+                <span style="color:var(--text-3);font-size:.8rem;">Your listing price:</span>
+                <strong style="color:var(--success);">₹{{ sale.get_subtotal }}</strong><br>
+                <span style="color:var(--text-3);font-size:.8rem;">Platform fee (12%):</span>
+                <strong style="color:var(--accent);">₹{{ sale.order.commission_fee }}</strong><br>
+                <span style="color:var(--text-3);font-size:.8rem;">Buyer paid total:</span>
+                <strong>₹{{ sale.order.total }}</strong>
+              </div>
+            </div>
+
+          </div>
+          <div class="sale-actions">
+            <a href="{% url 'order_detail' sale.order.order_id %}" class="btn btn-primary btn-sm">📋 View Full Order</a>
+            {% if sale.item %}
+            <a href="{% url 'chat' sale.item.pk sale.order.buyer.pk %}" class="btn btn-ghost btn-sm">💬 Chat with Buyer</a>
+            {% endif %}
+          </div>
+        </div>
+
+      </div>
+      {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="sales-card reveal">
+      <div class="empty-sales">
+        <div class="empty-sales-icon">💸</div>
+        <h3 style="color:var(--text-2);margin-bottom:8px;">No sales yet</h3>
+        <p>When buyers purchase your items, full order details appear here — including their address and phone number.</p>
+        <br>
+        <a href="{% url 'post_item' %}" class="btn btn-primary">List an Item</a>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+<script>
+function toggleSale(pk) {
+  document.getElementById('sale-' + pk).classList.toggle('open');
+}
+document.querySelectorAll('.sales-card.new').forEach(c => c.classList.add('open'));
+</script>
+{% endblock %}

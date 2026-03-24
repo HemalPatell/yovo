@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Sign In — YOVO{% endblock %}
+{% block content %}
+<div class="auth-page">
+  <div class="auth-bg">
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+  </div>
+  <div class="auth-card reveal">
+    <div class="auth-header">
+      <a href="{% url 'home' %}" class="auth-logo">YOVO</a>
+      <h1>Welcome back</h1>
+      <p>Sign in to continue buying and selling</p>
+    </div>
+
+    <form method="POST" class="auth-form">
+      {% csrf_token %}
+      {% for field in form %}
+      <div class="form-group">
+        <label class="form-label">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}
+        <span class="form-error">{{ field.errors|join:", " }}</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+      {% if form.non_field_errors %}
+      <div class="form-error-block">{{ form.non_field_errors|join:", " }}</div>
+      {% endif %}
+      <button type="submit" class="btn btn-primary btn-block btn-lg">Sign In</button>
+    </form>
+
+    <p class="auth-switch">
+      Don't have an account? <a href="{% url 'register' %}">Create one free →</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

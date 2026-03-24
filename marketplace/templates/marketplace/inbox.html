@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Inbox — YOVO{% endblock %}
+
+{% block extra_css %}
+<style>
+.inbox-page { padding: 100px 0 80px; min-height: 100vh; }
+.inbox-header { margin-bottom: 32px; }
+.inbox-header h1 { font-size: 2rem; margin-bottom: 6px; }
+.inbox-header p  { color: var(--text-2); }
+
+.inbox-list {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.inbox-row {
+  display: grid;
+  grid-template-columns: 52px 1fr auto;
+  align-items: center; gap: 16px;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+  text-decoration: none; color: var(--text);
+  transition: background var(--transition);
+  position: relative;
+}
+.inbox-row:last-child { border-bottom: none; }
+.inbox-row:hover { background: var(--bg-2); }
+.inbox-row.has-unread { background: rgba(200,119,58,0.04); }
+
+.inbox-av {
+  width: 50px; height: 50px; border-radius: 50%;
+  background: var(--grad-accent); color: #fff;
+  font-size: 1.2rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.inbox-info { min-width: 0; }
+.inbox-name { font-weight: 700; font-size: 0.95rem; margin-bottom: 2px; display: flex; align-items: center; gap: 8px; }
+.inbox-item { font-size: 0.75rem; color: var(--accent); margin-bottom: 3px; }
+.inbox-preview { font-size: 0.83rem; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.inbox-preview.bold { color: var(--text); font-weight: 600; }
+
+.inbox-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+.inbox-time { font-size: 0.72rem; color: var(--text-3); }
+.inbox-unread {
+  background: var(--accent); color: #fff;
+  border-radius: 999px; min-width: 22px; height: 22px;
+  font-size: 0.68rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 6px;
+}
+
+.inbox-empty {
+  padding: 80px 24px;
+  text-align: center;
+  color: var(--text-3);
+}
+.inbox-empty-icon { font-size: 4rem; margin-bottom: 16px; }
+.inbox-empty h3 { font-size: 1.3rem; color: var(--text-2); margin-bottom: 8px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="inbox-page">
+  <div class="container">
+    <div class="inbox-header reveal">
+      <h1>💬 Inbox</h1>
+      <p>All your conversations in one place</p>
+    </div>
+
+    {% if conversation_list %}
+    <div class="inbox-list reveal">
+      {% for convo in conversation_list %}
+      <a href="{% url 'chat' convo.item.pk convo.other_user.pk %}" class="inbox-row {% if convo.unread > 0 %}has-unread{% endif %}">
+        <div class="inbox-av">{{ convo.other_user.username|first|upper }}</div>
+        <div class="inbox-info">
+          <div class="inbox-name">
+            {{ convo.other_user.get_full_name|default:convo.other_user.username }}
+            {% if convo.unread > 0 %}<span style="width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block;"></span>{% endif %}
+          </div>
+          <div class="inbox-item">📦 {{ convo.item.title }} — ₹{{ convo.item.price }}</div>
+          <div class="inbox-preview {% if convo.unread > 0 %}bold{% endif %}">
+            {% if convo.message.sender == request.user %}You: {% endif %}
+            {{ convo.message.content|truncatechars:70 }}
+          </div>
+        </div>
+        <div class="inbox-meta">
+          <span class="inbox-time">{{ convo.message.timestamp|timesince }} ago</span>
+          {% if convo.unread > 0 %}
+          <span class="inbox-unread">{{ convo.unread }}</span>
+          {% endif %}
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="inbox-list reveal">
+      <div class="inbox-empty">
+        <div class="inbox-empty-icon">✉️</div>
+        <h3>No messages yet</h3>
+        <p>When buyers contact you about your items, conversations will appear here.</p>
+        <br>
+        <a href="{% url 'home' %}" class="btn btn-primary">Browse Items to Chat</a>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/* ── Clear badge instantly when conversation opened ── */
+document.querySelectorAll('.inbox-row').forEach(link => {
+  link.addEventListener('click', function() {
+    const badge = this.querySelector('.inbox-unread');
+    const count = badge ? (parseInt(badge.textContent) || 1) : 0;
+
+    // Hide orange badge
+    if (badge) badge.style.display = 'none';
+
+    // Remove blue dot
+    const dot = this.querySelector('.inbox-name span[style*="border-radius:50%"]');
+    if (dot) dot.remove();
+
+    // Remove bold preview
+    const preview = this.querySelector('.inbox-preview');
+    if (preview) preview.classList.remove('bold');
+
+    // Remove highlight
+    this.classList.remove('has-unread');
+
+    // Update nav badge
+    if (count > 0) {
+      const nav = document.getElementById('nav-msg-badge');
+      if (nav) {
+        const next = Math.max(0, (parseInt(nav.textContent) || 0) - count);
+        if (next <= 0) nav.style.display = 'none';
+        else { nav.style.display = 'flex'; nav.textContent = next; }
+      }
+    }
+  });
+});
+</script>
+{% endblock %}

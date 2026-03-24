@@ -1,0 +1,281 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Order {{ order.order_id }} — YOVO{% endblock %}
+
+{% block extra_css %}
+<style>
+.order-detail-page { padding: 100px 0 80px; min-height: 100vh; }
+.back-link { display:inline-flex;align-items:center;gap:6px;color:var(--text-2);text-decoration:none;font-size:0.875rem;margin-bottom:24px;transition:color var(--transition); }
+.back-link:hover { color:var(--accent); }
+
+.order-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px; align-items: start;
+}
+
+.od-panel {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); overflow: hidden;
+  box-shadow: var(--shadow-sm); margin-bottom: 20px;
+}
+.od-panel:last-child { margin-bottom: 0; }
+.od-panel-head {
+  padding: 16px 24px; border-bottom: 1px solid var(--border);
+  background: var(--bg); display: flex; align-items: center;
+  justify-content: space-between;
+}
+.od-panel-head h2 { font-size: 0.95rem; font-family: var(--font-body); font-weight: 700; }
+.od-panel-body { padding: 20px 24px; }
+
+/* ── Status badge ─────────────────────────── */
+.big-status {
+  display: flex; align-items: center; gap: 14px;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+}
+.big-status-icon { font-size: 2.2rem; }
+.big-status-text strong { display: block; font-size: 1.1rem; margin-bottom: 3px; }
+.big-status-text span   { font-size: 0.8rem; color: var(--text-3); }
+
+/* ── Tracking Timeline ────────────────────── */
+.tracking-timeline { padding: 24px; }
+.track-step {
+  display: flex; gap: 16px;
+  padding-bottom: 28px; position: relative;
+}
+.track-step:last-child { padding-bottom: 0; }
+.track-step::before {
+  content: '';
+  position: absolute;
+  left: 17px; top: 36px;
+  width: 2px; bottom: 0;
+  background: var(--border);
+}
+.track-step:last-child::before { display: none; }
+.track-dot {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; flex-shrink: 0;
+  border: 2px solid var(--border);
+  background: var(--bg-2);
+  position: relative; z-index: 1;
+}
+.track-step.done .track-dot {
+  border-color: var(--success);
+  background: rgba(58,156,104,0.12);
+}
+.track-step.active .track-dot {
+  border-color: var(--accent);
+  background: rgba(200,119,58,0.12);
+  box-shadow: 0 0 0 4px rgba(200,119,58,0.15);
+}
+.track-step.done::before  { background: var(--success); }
+.track-info strong { display: block; font-size: 0.875rem; margin-bottom: 3px; }
+.track-info span   { font-size: 0.75rem; color: var(--text-3); }
+
+/* ── Order items ──────────────────────────── */
+.od-item-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 0; border-bottom: 1px solid var(--border);
+}
+.od-item-row:last-child { border-bottom: none; }
+.od-item-img {
+  width: 52px; height: 52px; border-radius: var(--radius-sm);
+  overflow: hidden; background: var(--bg-2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem; flex-shrink: 0;
+}
+.od-item-img img { width:100%;height:100%;object-fit:cover; }
+.od-item-name  { font-weight:600; font-size:0.875rem; flex:1; }
+.od-item-price { font-weight:700; font-family:var(--font-display); color:var(--accent); }
+
+/* ── Summary sidebar ──────────────────────── */
+.summary-row { display:flex;justify-content:space-between;font-size:0.875rem;margin-bottom:10px; }
+.summary-row span:last-child { font-weight:600; }
+.summary-total { font-size:1.05rem; font-weight:700; border-top:1px solid var(--border); padding-top:12px; margin-top:4px; }
+
+/* ── Payment info ─────────────────────────── */
+.payment-info-row { display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.875rem; }
+.payment-info-row:last-child { border-bottom:none; }
+.payment-info-row span:first-child { color:var(--text-2); }
+.payment-info-row span:last-child  { font-weight:600; }
+
+/* ── Seller contact ───────────────────────── */
+.seller-contact-card {
+  background: rgba(200,119,58,0.06);
+  border: 1px solid rgba(200,119,58,0.15);
+  border-radius: var(--radius); padding: 16px;
+}
+.seller-contact-card h4 { font-size:0.82rem;font-weight:700;margin-bottom:10px;color:var(--accent); }
+
+@media (max-width:860px) { .order-detail-grid { grid-template-columns:1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="order-detail-page">
+  <div class="container">
+    {% if is_seller_view %}
+    <a href="{% url 'seller_sales' %}" class="back-link">← Back to My Sales</a>
+    <div style="background:rgba(200,119,58,.07);border:1px solid rgba(200,119,58,.2);border-radius:12px;padding:14px 20px;margin-bottom:20px;font-size:.85rem;color:var(--accent);">
+      🔔 <strong>Seller View</strong> — A customer bought your item. Review their details below.
+    </div>
+    {% else %}
+    <a href="{% url 'my_orders' %}" class="back-link">← Back to My Orders</a>
+    {% endif %}
+
+    <!-- Top row -->
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px;" class="reveal">
+      <div>
+        <h1 style="font-size:1.6rem;margin-bottom:4px;">Order {{ order.order_id }}</h1>
+        <p style="color:var(--text-2);font-size:0.875rem;">Placed on {{ order.created_at|date:"d F Y" }} at {{ order.created_at|date:"g:i A" }}</p>
+      </div>
+      <span class="order-status-badge status-{{ order.status }}" style="padding:8px 20px;border-radius:999px;font-size:0.82rem;font-weight:700;">
+        {{ order.get_status_display }}
+      </span>
+    </div>
+
+    <div class="order-detail-grid">
+
+      <!-- LEFT -->
+      <div>
+        <!-- Tracking Timeline -->
+        <div class="od-panel reveal">
+          <div class="od-panel-head"><h2>🚚 Order Tracking</h2></div>
+          <div class="tracking-timeline">
+            {% with s=order.status %}
+
+            <div class="track-step done">
+              <div class="track-dot">✅</div>
+              <div class="track-info">
+                <strong>Order Placed</strong>
+                <span>{{ order.created_at|date:"d M Y, g:i A" }}</span>
+              </div>
+            </div>
+
+            <div class="track-step {% if s == 'confirmed' %}active{% elif s in 'shipped,delivered' %}done{% endif %}">
+              <div class="track-dot">{% if s in 'shipped,delivered' %}✅{% elif s == 'confirmed' %}🔔{% else %}⏳{% endif %}</div>
+              <div class="track-info">
+                <strong>Order Confirmed</strong>
+                <span>{% if s == 'confirmed' %}Your order is confirmed — seller will ship soon.{% elif s in 'shipped,delivered' %}Confirmed{% else %}Awaiting confirmation{% endif %}</span>
+              </div>
+            </div>
+
+            <div class="track-step {% if s == 'shipped' %}active{% elif s == 'delivered' %}done{% endif %}">
+              <div class="track-dot">{% if s == 'delivered' %}✅{% elif s == 'shipped' %}🚚{% else %}📦{% endif %}</div>
+              <div class="track-info">
+                <strong>Shipped</strong>
+                <span>{% if s == 'shipped' %}Your order is on the way!{% elif s == 'delivered' %}Shipped{% else %}Not yet shipped{% endif %}</span>
+              </div>
+            </div>
+
+            <div class="track-step {% if s == 'delivered' %}done{% endif %}">
+              <div class="track-dot">{% if s == 'delivered' %}✅{% else %}🏠{% endif %}</div>
+              <div class="track-info">
+                <strong>Delivered</strong>
+                <span>{% if s == 'delivered' %}Your order has been delivered!{% else %}Estimated: 3–5 business days{% endif %}</span>
+              </div>
+            </div>
+
+            {% endwith %}
+          </div>
+        </div>
+
+        <!-- Items ordered -->
+        <div class="od-panel reveal">
+          <div class="od-panel-head"><h2>🛍 Items Ordered</h2></div>
+          <div class="od-panel-body">
+            {% for oi in order.order_items.all %}
+            <div class="od-item-row">
+              <div class="od-item-img">
+                {% if oi.item and oi.item.image %}<img src="{{ oi.item.image.url }}" alt="{{ oi.title }}" />
+                {% else %}📦{% endif %}
+              </div>
+              <div class="od-item-name">
+                {{ oi.title }}
+                <div style="font-size:0.75rem;color:var(--text-3);">Qty: {{ oi.quantity }}{% if oi.seller %} · From: {{ oi.seller.get_full_name|default:oi.seller.username }}{% endif %}</div>
+              </div>
+              <div class="od-item-price">₹{{ oi.get_subtotal }}</div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Delivery info -->
+        <div class="od-panel reveal">
+          <div class="od-panel-head"><h2>📍 Delivery Address</h2></div>
+          <div class="od-panel-body">
+            <p style="font-weight:600;margin-bottom:4px;">{{ order.delivery_name }}</p>
+            <p style="color:var(--text-2);font-size:0.875rem;line-height:1.6;">{{ order.delivery_addr }}</p>
+            {% if order.delivery_phone %}
+            <p style="color:var(--text-2);font-size:0.875rem;margin-top:6px;">📞 {{ order.delivery_phone }}</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT sidebar -->
+      <div>
+
+        <!-- Order Summary -->
+        <div class="od-panel reveal">
+          <div class="od-panel-head"><h2>💰 Order Summary</h2></div>
+          <div class="od-panel-body">
+            {% with subtotal=order.total commission=order.commission_fee %}
+            <div class="summary-row"><span>Items Subtotal</span><span>₹{{ subtotal }}</span></div>
+            <div class="summary-row"><span>Delivery</span><span style="color:var(--success)">FREE</span></div>
+            <div class="summary-row"><span>Platform Fee (12%)</span><span style="color:var(--accent);font-weight:600;">₹{{ commission }}</span></div>
+            <div class="summary-row summary-total"><span>Total Paid</span><span>₹{{ subtotal }}</span></div>
+            {% endwith %}
+          </div>
+        </div>
+
+        <!-- Payment Info -->
+        <div class="od-panel reveal">
+          <div class="od-panel-head"><h2>💳 Payment</h2></div>
+          <div class="od-panel-body">
+            <div class="payment-info-row">
+              <span>Method</span>
+              <span>{{ order.get_payment_method_display }}</span>
+            </div>
+            {% if order.payment_ref %}
+            <div class="payment-info-row">
+              <span>Reference</span>
+              <span>{{ order.payment_ref }}</span>
+            </div>
+            {% endif %}
+            <div class="payment-info-row">
+              <span>Status</span>
+              <span style="color:var(--success)">✅ Paid</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Seller contact -->
+        {% for oi in order.order_items.all %}
+        {% if oi.seller and forloop.first %}
+        <div class="od-panel reveal">
+          <div class="od-panel-head"><h2>👤 Seller</h2></div>
+          <div class="od-panel-body">
+            <div class="seller-contact-card">
+              <h4>Need help with your order?</h4>
+              <p style="font-size:0.82rem;color:var(--text-2);margin-bottom:12px;">
+                Contact the seller directly via chat for any questions about shipping or the item.
+              </p>
+              {% if oi.item %}
+              <a href="{% url 'chat' oi.item.pk oi.seller.pk %}" class="btn btn-primary btn-block btn-sm">
+                💬 Chat with {{ oi.seller.get_full_name|default:oi.seller.username }}
+              </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

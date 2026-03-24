@@ -1,0 +1,63 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+{% block content %}
+<style>
+.y-title{font-size:1.9rem;font-weight:800;margin-bottom:6px;background:linear-gradient(120deg,#f0ece8,#e8853a);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.y-sub{color:#9090a8;font-size:.85rem;margin-bottom:30px}
+.y-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;margin-bottom:30px}
+.y-card{background:#141420;border:1px solid #2a2a3a;border-radius:14px;padding:20px;text-decoration:none;display:block;transition:all .2s;position:relative;overflow:hidden}
+.y-card:hover{border-color:#e8853a;transform:translateY(-3px);box-shadow:0 10px 30px rgba(232,133,58,.15)}
+.y-card .ic{font-size:2rem;margin-bottom:12px;display:block}
+.y-card .name{font-weight:700;color:#f0ece8;font-size:.92rem;margin-bottom:4px}
+.y-card .sub{font-size:.72rem;color:#e8853a}
+.y-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#e8853a,#f5a623);transform:scaleX(0);transition:.2s;transform-origin:left}
+.y-card:hover::after{transform:scaleX(1)}
+.y-section{font-size:.68rem;font-weight:800;color:#505068;text-transform:uppercase;letter-spacing:1.5px;margin:24px 0 10px;display:flex;align-items:center;gap:10px}
+.y-section::after{content:'';flex:1;height:1px;background:#2a2a3a}
+</style>
+
+<div>
+  <div class="y-title">📊 YOVO Dashboard</div>
+  <div class="y-sub">Welcome, <strong style="color:#e8853a">{{ user.username }}</strong> — manage your marketplace below.</div>
+</div>
+
+<div class="y-section">Quick Access</div>
+<div class="y-grid">
+  <a href="/admin/marketplace/item/" class="y-card"><span class="ic">🛍</span><div class="name">Items</div><div class="sub">All listings →</div></a>
+  <a href="/admin/marketplace/order/" class="y-card"><span class="ic">📦</span><div class="name">Orders</div><div class="sub">Track & update →</div></a>
+  <a href="/admin/auth/user/" class="y-card"><span class="ic">👥</span><div class="name">Users</div><div class="sub">Manage accounts →</div></a>
+  <a href="/admin/marketplace/message/" class="y-card"><span class="ic">💬</span><div class="name">Messages</div><div class="sub">All chats →</div></a>
+  <a href="/admin/marketplace/question/" class="y-card"><span class="ic">❓</span><div class="name">Q&amp;A</div><div class="sub">Buyer questions →</div></a>
+  <a href="/admin/marketplace/profile/" class="y-card"><span class="ic">👤</span><div class="name">Profiles</div><div class="sub">User profiles →</div></a>
+  <a href="/admin/marketplace/cart/" class="y-card"><span class="ic">🛒</span><div class="name">Carts</div><div class="sub">Active carts →</div></a>
+  <a href="/admin/marketplace/orderitem/" class="y-card"><span class="ic">🧾</span><div class="name">Order Items</div><div class="sub">Line items →</div></a>
+</div>
+
+{% if app_list %}
+{% for app in app_list %}
+<div class="y-section">{{ app.name }}</div>
+<div class="y-grid">
+  {% for model in app.models %}
+  <a href="{{ model.admin_url }}" class="y-card">
+    <span class="ic">
+      {% if "item" in model.name|lower and "image" not in model.name|lower and "order" not in model.name|lower %}🛍
+      {% elif "order" in model.name|lower and "item" not in model.name|lower %}📦
+      {% elif "order item" in model.name|lower %}🧾
+      {% elif "message" in model.name|lower %}💬
+      {% elif "question" in model.name|lower %}❓
+      {% elif "profile" in model.name|lower %}👤
+      {% elif "cart item" in model.name|lower %}🏷
+      {% elif "cart" in model.name|lower %}🛒
+      {% elif "image" in model.name|lower %}📷
+      {% elif "user" in model.name|lower %}👥
+      {% elif "group" in model.name|lower %}🔐
+      {% else %}📋{% endif %}
+    </span>
+    <div class="name">{{ model.name }}</div>
+    <div class="sub">View all →</div>
+  </a>
+  {% endfor %}
+</div>
+{% endfor %}
+{% endif %}
+{% endblock %}

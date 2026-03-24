@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}YOVO — Your Old, Valued Once More{% endblock %}</title>
+  <meta name="description" content="YOVO is a modern marketplace for buying and selling second-hand clothes, books and accessories." />
+  {% load static %}
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="{% static 'css/main.css' %}" />
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     NAVBAR
+══════════════════════════════════════ -->
+<nav class="navbar" id="navbar">
+  <div class="nav-inner">
+    <a href="{% url 'home' %}" class="nav-logo">
+      <span class="logo-y">Y</span>OVO
+    </a>
+
+    <div class="nav-links">
+      <a href="{% url 'home' %}" class="nav-link">Browse</a>
+      <a href="{% url 'faq' %}" class="nav-link">FAQ</a>
+      <a href="{% url 'about' %}" class="nav-link">About</a>
+      <a href="{% url 'sustainability' %}" class="nav-link">🌿</a>
+      {% if user.is_authenticated %}
+        <a href="{% url 'post_item' %}" class="nav-link">Sell</a>
+        <a href="{% url 'dashboard' %}" class="nav-link">Dashboard</a>
+        <a href="{% url 'inbox' %}" class="nav-link">Messages</a>
+      {% endif %}
+    </div>
+
+    <div class="nav-actions">
+      <!-- Theme Toggle -->
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+        <span class="theme-icon sun">☀</span>
+        <span class="theme-icon moon">☽</span>
+      </button>
+
+      <!-- Cart -->
+      {% if user.is_authenticated %}
+      <a href="{% url 'cart' %}" class="cart-btn" aria-label="Cart">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+        </svg>
+        {% if cart_count > 0 %}
+        <span class="cart-badge">{{ cart_count }}</span>
+        {% endif %}
+      </a>
+
+      <!-- User Menu -->
+      <div class="user-menu">
+        <button class="user-avatar-btn" id="userMenuBtn">
+          {{ user.username|first|upper }}
+        </button>
+        <div class="user-dropdown" id="userDropdown">
+          <div class="dropdown-header">
+            <strong>{{ user.get_full_name|default:user.username }}</strong>
+            <span>{{ user.email }}</span>
+          </div>
+          <a href="{% url 'dashboard' %}" class="dropdown-item">Dashboard</a>
+          <a href="{% url 'cart' %}" class="dropdown-item">My Cart</a>
+          <div class="dropdown-divider"></div>
+          <a href="{% url 'logout' %}" class="dropdown-item danger">Sign Out</a>
+        </div>
+      </div>
+
+      {% else %}
+      <a href="{% url 'login' %}" class="btn btn-ghost">Sign In</a>
+      <a href="{% url 'register' %}" class="btn btn-primary">Get Started</a>
+      {% endif %}
+    </div>
+
+    <!-- Mobile hamburger -->
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="{% url 'home' %}">Browse</a>
+    {% if user.is_authenticated %}
+      <a href="{% url 'post_item' %}">Sell an Item</a>
+      <a href="{% url 'dashboard' %}">Dashboard</a>
+      <a href="{% url 'inbox' %}">Messages</a>
+      <a href="{% url 'cart' %}">Cart ({{ cart_count }})</a>
+      <a href="{% url 'logout' %}">Sign Out</a>
+    {% else %}
+      <a href="{% url 'login' %}">Sign In</a>
+      <a href="{% url 'register' %}">Get Started</a>
+    {% endif %}
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════
+     MESSAGES / TOASTS
+══════════════════════════════════════ -->
+{% if messages %}
+<div class="toast-container" id="toastContainer">
+  {% for message in messages %}
+  <div class="toast toast-{{ message.tags }}" role="alert">
+    <span>{{ message }}</span>
+    <button onclick="this.parentElement.remove()" class="toast-close">×</button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- ══════════════════════════════════════
+     MAIN CONTENT
+══════════════════════════════════════ -->
+<main class="main-content">
+  {% block content %}{% endblock %}
+</main>
+
+<!-- ══════════════════════════════════════
+     FOOTER
+══════════════════════════════════════ -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <a href="{% url 'home' %}" class="footer-logo">YOVO</a>
+      <p>Your Old, Valued Once More.</p>
+      <p class="footer-tagline">Giving pre-loved clothes, books &amp; accessories a second life — sustainably, beautifully.</p>
+    </div>
+    <div class="footer-links">
+      <div class="footer-col">
+        <h4>Marketplace</h4>
+        <a href="{% url 'home' %}?category=clothes">Clothes</a>
+        <a href="{% url 'home' %}?category=books">Books</a>
+        <a href="{% url 'home' %}?category=accessories">Accessories</a>
+        {% if user.is_authenticated %}
+        <a href="{% url 'post_item' %}">Sell an Item</a>
+        {% endif %}
+      </div>
+      <div class="footer-col">
+        <h4>Account</h4>
+        {% if user.is_authenticated %}
+        <a href="{% url 'dashboard' %}">Dashboard</a>
+        <a href="{% url 'cart' %}">Cart</a>
+        <a href="{% url 'logout' %}">Sign Out</a>
+        {% else %}
+        <a href="{% url 'register' %}">Create Account</a>
+        <a href="{% url 'login' %}">Sign In</a>
+        {% endif %}
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="{% url 'about' %}">About Us</a>
+        <a href="{% url 'sustainability' %}">Sustainability</a>
+        <a href="{% url 'contact' %}">Contact</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2024 YOVO. Made with ♥ for a sustainable future.</span>
+    <div class="footer-badges">
+      <span class="badge">🌿 Eco-Friendly</span>
+      <span class="badge">🔒 Secure</span>
+      <span class="badge">✨ Curated</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ══════════════════════════════════════
+     JS
+══════════════════════════════════════ -->
+<script src="{% static 'js/main.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

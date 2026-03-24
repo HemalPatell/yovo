@@ -1,0 +1,640 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{% if editing %}Edit — {{ item.title }}{% else %}List an Item{% endif %} — YOVO{% endblock %}
+
+{% block extra_css %}
+<style>
+.post-page { padding: 100px 0 80px; min-height: 100vh; background: var(--bg); }
+.post-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 28px;
+  align-items: start;
+}
+
+/* ── Panel ─────────────────────────────────────── */
+.post-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 20px;
+}
+.post-panel:last-child { margin-bottom: 0; }
+.post-panel-head {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  display: flex; align-items: center; gap: 10px;
+}
+.post-panel-head h2 { font-size: 0.95rem; font-family: var(--font-body); font-weight: 700; }
+.post-panel-head .head-icon { font-size: 1.1rem; }
+.post-panel-body { padding: 22px 24px; display: flex; flex-direction: column; gap: 18px; }
+
+/* ── Photo Grid ────────────────────────────────── */
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+.photo-slot {
+  aspect-ratio: 1;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  transition: all var(--transition);
+  background: var(--bg-2);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 4px;
+}
+.photo-slot:hover { border-color: var(--accent); background: rgba(200,119,58,0.05); }
+.photo-slot.has-image { border-style: solid; border-color: var(--accent); }
+.photo-slot input[type="file"] {
+  position: absolute; inset: 0;
+  opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.photo-slot-preview {
+  position: absolute; inset: 0;
+  display: none;
+}
+.photo-slot-preview img { width: 100%; height: 100%; object-fit: cover; }
+.photo-slot-label { font-size: 0.65rem; color: var(--text-3); text-align: center; font-weight: 600; }
+.photo-slot-icon  { font-size: 1.3rem; }
+.photo-slot.main-slot .photo-slot-icon { font-size: 1.6rem; }
+
+.photo-remove {
+  position: absolute; top: 4px; right: 4px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(200,57,58,0.85); color: #fff;
+  font-size: 0.7rem; font-weight: 700;
+  display: none; align-items: center; justify-content: center;
+  cursor: pointer; z-index: 5; border: none;
+  line-height: 1;
+}
+.photo-slot.has-image:hover .photo-remove { display: flex; }
+.photo-slot.has-image .photo-slot-icon,
+.photo-slot.has-image .photo-slot-label { display: none; }
+.photo-slot.has-image .photo-slot-preview { display: block; }
+
+.photo-grid-hint { font-size: 0.75rem; color: var(--text-3); margin-top: 4px; }
+
+/* ── Condition Selector ─────────────────────────── */
+.condition-options {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+.condition-opt {
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 6px;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition);
+  position: relative;
+}
+.condition-opt:hover { border-color: var(--accent); }
+.condition-opt.selected {
+  border-color: var(--accent);
+  background: rgba(200,119,58,0.08);
+}
+.condition-opt input { display: none; }
+.cond-emoji { font-size: 1.3rem; display: block; margin-bottom: 4px; }
+.cond-label { font-size: 0.65rem; font-weight: 600; color: var(--text-2); display: block; }
+
+/* ── Bill upload ─────────────────────────────────── */
+.bill-upload-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  text-align: center;
+  transition: all var(--transition);
+  cursor: pointer;
+  position: relative;
+  background: var(--bg-2);
+}
+.bill-upload-zone:hover { border-color: var(--accent); background: rgba(200,119,58,0.04); }
+.bill-upload-zone input {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.bill-icon  { font-size: 2rem; margin-bottom: 8px; }
+.bill-title { font-weight: 600; font-size: 0.875rem; margin-bottom: 4px; }
+.bill-sub   { font-size: 0.75rem; color: var(--text-3); }
+.bill-badge {
+  display: inline-block;
+  background: rgba(58,156,104,0.12); color: #2d7a52;
+  border: 1px solid rgba(58,156,104,0.2);
+  border-radius: 999px; font-size: 0.68rem; font-weight: 700;
+  padding: 2px 8px; margin-bottom: 8px;
+}
+
+/* ── Form row ────────────────────────────────────── */
+.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* ── Sidebar preview ─────────────────────────────── */
+.preview-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 90px;
+}
+.preview-card-top {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+.preview-card-top h3 { font-size: 0.85rem; font-family: var(--font-body); font-weight: 700; color: var(--text-2); }
+.preview-img {
+  width: 100%; aspect-ratio: 4/3;
+  background: var(--bg-2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 3rem;
+  overflow: hidden;
+}
+.preview-img img { width: 100%; height: 100%; object-fit: cover; }
+.preview-body { padding: 16px 20px; }
+.preview-title  { font-family: var(--font-display); font-size: 1.1rem; margin-bottom: 4px; }
+.preview-price  { font-family: var(--font-display); font-size: 1.4rem; font-weight: 700; color: var(--accent); }
+.preview-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.preview-badge  {
+  font-size: 0.7rem; font-weight: 600; padding: 3px 8px;
+  border-radius: 999px; border: 1px solid var(--border);
+  background: var(--bg-2); color: var(--text-2);
+}
+
+/* ── Tips card ───────────────────────────────────── */
+.tips-card {
+  background: rgba(200,119,58,0.06);
+  border: 1px solid rgba(200,119,58,0.15);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-top: 16px;
+}
+.tips-card h4 { font-size: 0.82rem; font-weight: 700; margin-bottom: 10px; color: var(--accent); }
+.tips-card ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.tips-card li { font-size: 0.78rem; color: var(--text-2); display: flex; gap: 6px; }
+
+/* ── Existing images (edit mode) ─────────────────── */
+.existing-photos {
+  display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 8px;
+}
+.existing-photo {
+  position: relative; width: 70px; height: 70px;
+  border-radius: var(--radius-sm); overflow: hidden;
+  border: 1px solid var(--border);
+}
+.existing-photo img { width: 100%; height: 100%; object-fit: cover; }
+.existing-photo-del {
+  position: absolute; top: 2px; right: 2px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: rgba(200,57,58,0.9); color: #fff;
+  font-size: 0.65rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  text-decoration: none;
+}
+
+@media (max-width: 860px) {
+  .post-layout { grid-template-columns: 1fr; }
+  .condition-options { grid-template-columns: repeat(3, 1fr); }
+  .photo-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 500px) {
+  .photo-grid { grid-template-columns: repeat(2, 1fr); }
+  .form-row-2 { grid-template-columns: 1fr; }
+}
+/* ── Gender Selector ─────────────────────────────── */
+.gender-options {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.gender-opt {
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition);
+  position: relative;
+}
+.gender-opt:hover { border-color: var(--accent); }
+.gender-opt.selected {
+  border-color: var(--accent);
+  background: rgba(200,119,58,0.08);
+}
+.gender-opt input { display: none; }
+.gender-emoji { font-size: 1.5rem; display: block; margin-bottom: 4px; }
+.gender-label { font-size: 0.72rem; font-weight: 600; color: var(--text-2); display: block; }
+@media (max-width: 500px) { .gender-options { grid-template-columns: repeat(2, 1fr); } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="post-page">
+  <div class="container">
+
+    <div style="margin-bottom:28px;" class="reveal">
+      <h1 style="font-size:1.8rem;margin-bottom:6px;">
+        {% if editing %}✏️ Edit Listing{% else %}📸 List an Item{% endif %}
+      </h1>
+      <p style="color:var(--text-2);">
+        {% if editing %}Update your listing details below.{% else %}Give your pre-loved item a second life.{% endif %}
+      </p>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" id="itemForm">
+      {% csrf_token %}
+      <div class="post-layout">
+
+        <!-- ── LEFT ────────────────────────────── -->
+        <div>
+
+          <!-- Photos Panel -->
+          <div class="post-panel reveal">
+            <div class="post-panel-head">
+              <span class="head-icon">📷</span>
+              <h2>Photos <span style="color:var(--text-3);font-weight:400;font-size:0.82rem;">(1 required, up to 5)</span></h2>
+            </div>
+            <div class="post-panel-body">
+
+              {% if editing %}
+              <div>
+                <p style="font-size:0.78rem;font-weight:600;color:var(--text-2);margin-bottom:8px;">Current photos:</p>
+                <div class="existing-photos">
+                  {# Main image — cannot be individually deleted #}
+                  {% if item.image %}
+                  <div class="existing-photo">
+                    <img src="{{ item.image.url }}" alt="Main photo" />
+                    <span style="position:absolute;bottom:2px;left:0;right:0;text-align:center;font-size:0.55rem;background:rgba(0,0,0,0.5);color:#fff;padding:2px;">Main</span>
+                  </div>
+                  {% endif %}
+                  {# Extra images — use queryset so we have real PKs #}
+                  {% for img in extra_images_qs %}
+                  <div class="existing-photo">
+                    <img src="{{ img.image.url }}" alt="Photo {{ img.order }}" />
+                    <a href="{% url 'delete_extra_image' img.pk %}" class="existing-photo-del" onclick="return confirm('Remove this photo?')">✕</a>
+                  </div>
+                  {% endfor %}
+                </div>
+                <p style="font-size:0.73rem;color:var(--text-3);margin-bottom:4px;">Upload new photos below to add / replace extra photos:</p>
+              </div>
+              {% endif %}
+
+              <div class="photo-grid">
+                <!-- Slot 1: Main photo -->
+                <div class="photo-slot main-slot" id="slot-main">
+                  <div class="photo-slot-preview" id="preview-main">
+                    <img id="img-main" src="" alt="" />
+                  </div>
+                  <button type="button" class="photo-remove" onclick="clearSlot('main')">✕</button>
+                  <span class="photo-slot-icon">📷</span>
+                  <span class="photo-slot-label">Main Photo *</span>
+                  <input type="file" name="image" id="input-main" accept="image/*" onchange="previewSlot('main', this)" {% if not editing %}required{% endif %} />
+                </div>
+                <!-- Slots 2-5: Extra photos -->
+                {% for i in "2345" %}
+                <div class="photo-slot" id="slot-photo_{{ i }}">
+                  <div class="photo-slot-preview" id="preview-photo_{{ i }}">
+                    <img id="img-photo_{{ i }}" src="" alt="" />
+                  </div>
+                  <button type="button" class="photo-remove" onclick="clearSlot('photo_{{ i }}')">✕</button>
+                  <span class="photo-slot-icon">+</span>
+                  <span class="photo-slot-label">Photo {{ i }}</span>
+                  <input type="file" name="photo_{{ i }}" id="input-photo_{{ i }}" accept="image/*" onchange="previewSlot('photo_{{ i }}', this)" />
+                </div>
+                {% endfor %}
+              </div>
+              <p class="photo-grid-hint">📌 First photo is the cover. Clear, well-lit photos get more attention.</p>
+            </div>
+          </div>
+
+          <!-- Item Details Panel -->
+          <div class="post-panel reveal">
+            <div class="post-panel-head">
+              <span class="head-icon">📝</span>
+              <h2>Item Details</h2>
+            </div>
+            <div class="post-panel-body">
+              <div class="form-group">
+                <label class="form-label">Title *</label>
+                {{ form.title }}
+                {% if form.title.errors %}<span class="form-error">{{ form.title.errors|join:", " }}</span>{% endif %}
+              </div>
+              <div class="form-group">
+                <label class="form-label">Description *</label>
+                {{ form.description }}
+                <span style="font-size:0.73rem;color:var(--text-3);">Mention size, brand, defects, reason for selling.</span>
+                {% if form.description.errors %}<span class="form-error">{{ form.description.errors|join:", " }}</span>{% endif %}
+              </div>
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label class="form-label">Price (₹) *</label>
+                  {{ form.price }}
+                  {% if form.price.errors %}<span class="form-error">{{ form.price.errors|join:", " }}</span>{% endif %}
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Category *</label>
+                  {{ form.category }}
+                </div>
+                <div class="form-group" id="subcategoryGroup" style="display:none">
+                  <label class="form-label">Subcategory <span style="color:var(--text-2);font-weight:400">(optional)</span></label>
+                  {{ form.subcategory }}
+                  {% if form.subcategory.errors %}<span class="form-error">{{ form.subcategory.errors|join:", " }}</span>{% endif %}
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Location *</label>
+                {{ form.location }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Condition Panel -->
+          <div class="post-panel reveal">
+            <div class="post-panel-head">
+              <span class="head-icon">🔍</span>
+              <h2>Condition *</h2>
+            </div>
+            <div class="post-panel-body">
+              <div class="condition-options" id="conditionOptions">
+                {% for val, label in form.fields.condition.choices %}
+                {% with cur=current_condition|default:form.condition.value|default:"good" %}
+                <div class="condition-opt {% if val == cur %}selected{% endif %}"
+                     onclick="selectCondition('{{ val }}', this)">
+                  <input type="radio" name="condition" value="{{ val }}"
+                    {% if val == cur %}checked{% endif %} />
+                {% endwith %}
+                  <span class="cond-emoji">
+                    {% if val == 'new' %}✨
+                    {% elif val == 'like_new' %}🌟
+                    {% elif val == 'good' %}👍
+                    {% elif val == 'fair' %}👌
+                    {% else %}🔧{% endif %}
+                  </span>
+                  <span class="cond-label">
+                    {% if val == 'new' %}New
+                    {% elif val == 'like_new' %}Like New
+                    {% elif val == 'good' %}Good
+                    {% elif val == 'fair' %}Fair
+                    {% else %}Worn{% endif %}
+                  </span>
+                </div>
+                {% endfor %}
+              </div>
+              <p style="font-size:0.75rem;color:var(--text-3);">Be honest — buyers trust accurate condition ratings.</p>
+            </div>
+          </div>
+
+          <!-- Gender Panel -->
+          <div class="post-panel reveal" id="genderPanel" style="display:none;">
+            <div class="post-panel-head">
+              <span class="head-icon">👤</span>
+              <h2>Gender <span style="color:var(--text-3);font-weight:400;font-size:0.82rem;">(optional)</span></h2>
+            </div>
+            <div class="post-panel-body">
+              {{ form.gender }}
+              <div class="gender-options" id="genderOptions">
+                {% for val, label in form.fields.gender.choices %}{% if val %}
+                {% with cur=item.gender|default:'' %}
+                <div class="gender-opt {% if val == cur %}selected{% endif %}"
+                     onclick="selectGender('{{ val }}', this)">
+                  <input type="radio" name="_gender_radio" value="{{ val }}"
+                    {% if val == cur %}checked{% endif %} />
+                  <span class="gender-emoji">
+                    {% if val == 'men' %}👨{% elif val == 'women' %}👩{% elif val == 'unisex' %}🤝{% else %}🧒{% endif %}
+                  </span>
+                  <span class="gender-label">{{ label }}</span>
+                </div>
+                {% endwith %}
+                {% endif %}{% endfor %}
+              </div>
+              <p style="font-size:0.75rem;color:var(--text-3);margin-top:4px;">Helps buyers filter items made for them.</p>
+            </div>
+          </div>
+
+          <!-- Bill Upload Panel -->
+          <div class="post-panel reveal">
+            <div class="post-panel-head">
+              <span class="head-icon">🧾</span>
+              <h2>Bill / Receipt <span style="color:var(--success);font-size:0.78rem;font-weight:400;">(Optional)</span></h2>
+            </div>
+            <div class="post-panel-body">
+              <div class="bill-upload-zone" id="billZone">
+                <div class="bill-badge">Optional</div>
+                <div class="bill-icon">🧾</div>
+                <div class="bill-title" id="billTitle">Upload Bill or Receipt</div>
+                <div class="bill-sub">Adds trust and authenticity to your listing · JPG, PNG accepted</div>
+                <input type="file" name="bill" id="billInput" accept="image/*" onchange="billSelected(this)" />
+              </div>
+              {% if editing and item.bill %}
+              <p style="font-size:0.78rem;color:var(--success);margin-top:8px;">✅ Bill already uploaded. Upload a new file to replace it.</p>
+              {% endif %}
+              <p style="font-size:0.73rem;color:var(--text-3);">Having a bill increases buyer trust significantly. Skip if you don't have one.</p>
+            </div>
+          </div>
+
+          <!-- Submit -->
+          <div class="reveal" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+            <button type="submit" class="btn btn-primary btn-lg">
+              {% if editing %}💾 Save Changes{% else %}🚀 List Item{% endif %}
+            </button>
+            {% if editing %}
+            <a href="{% url 'item_detail' item.pk %}" class="btn btn-ghost">Cancel</a>
+            {% else %}
+            <a href="{% url 'home' %}" class="btn btn-ghost">Cancel</a>
+            {% endif %}
+            {% if form.errors %}
+            <span style="color:var(--danger);font-size:0.82rem;">⚠ Please fix the errors above.</span>
+            {% endif %}
+          </div>
+
+        </div><!-- end left -->
+
+        <!-- ── RIGHT: Preview sidebar ──────────── -->
+        <div>
+          <div class="preview-card reveal">
+            <div class="preview-card-top">
+              <h3>👁 Live Preview</h3>
+            </div>
+            <div class="preview-img" id="previewMain">
+              {% if editing and item.image %}
+              <img src="{{ item.image.url }}" alt="" id="previewMainImg" />
+              {% else %}
+              <span id="previewMainPlaceholder">📦</span>
+              <img id="previewMainImg" src="" alt="" style="display:none;" />
+              {% endif %}
+            </div>
+            <div class="preview-body">
+              <div class="preview-title" id="pvTitle">{% if editing %}{{ item.title }}{% else %}Item Title{% endif %}</div>
+              <div class="preview-price" id="pvPrice">{% if editing %}₹{{ item.price }}{% else %}₹0{% endif %}</div>
+              <div class="preview-badges">
+                <span class="preview-badge" id="pvCategory">{% if editing %}{{ item.get_category_display }}{% else %}Category{% endif %}</span>
+                <span class="preview-badge" id="pvCondition">{% if editing %}{{ item.get_condition_display }}{% else %}Condition{% endif %}</span>
+                <span class="preview-badge" id="pvLocation">{% if editing %}{{ item.get_location_display }}{% else %}Location{% endif %}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="tips-card reveal">
+            <h4>💡 Tips for a great listing</h4>
+            <ul>
+              <li>📷 Use natural lighting for photos</li>
+              <li>📏 Mention exact measurements / size</li>
+              <li>🔍 Be honest about defects or wear</li>
+              <li>🏷 Price competitively — check similar items</li>
+              <li>🧾 Upload the bill for higher trust</li>
+            </ul>
+          </div>
+        </div>
+
+      </div><!-- end post-layout -->
+    </form>
+  </div>
+</div>
+
+<script>
+/* ── Photo preview ─────────────────────────────── */
+function previewSlot(slotId, input) {
+  if (!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const slot = document.getElementById('slot-' + slotId);
+    const img  = document.getElementById('img-' + slotId);
+    const prev = document.getElementById('preview-' + slotId);
+    img.src = e.target.result;
+    slot.classList.add('has-image');
+    // Also update main preview in sidebar
+    if (slotId === 'main') {
+      const pvImg  = document.getElementById('previewMainImg');
+      const pvPh   = document.getElementById('previewMainPlaceholder');
+      pvImg.src    = e.target.result;
+      pvImg.style.display = 'block';
+      if (pvPh) pvPh.style.display = 'none';
+    }
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function clearSlot(slotId) {
+  const slot  = document.getElementById('slot-' + slotId);
+  const input = document.getElementById('input-' + slotId);
+  const img   = document.getElementById('img-' + slotId);
+  input.value = '';
+  img.src     = '';
+  slot.classList.remove('has-image');
+  if (slotId === 'main') {
+    const pvImg = document.getElementById('previewMainImg');
+    const pvPh  = document.getElementById('previewMainPlaceholder');
+    pvImg.style.display = 'none';
+    if (pvPh) pvPh.style.display = '';
+  }
+}
+
+/* ── Condition selector ────────────────────────── */
+function selectCondition(val, el) {
+  document.querySelectorAll('.condition-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  el.querySelector('input').checked = true;
+  document.getElementById('pvCondition').textContent = el.querySelector('.cond-label').textContent.trim();
+}
+
+/* ── Bill selected ─────────────────────────────── */
+function billSelected(input) {
+  if (input.files && input.files[0]) {
+    document.getElementById('billTitle').textContent = '✅ ' + input.files[0].name;
+    document.getElementById('billZone').style.borderColor = 'var(--success)';
+  }
+}
+
+/* ── Live preview updates ──────────────────────── */
+function liveUpdate(fieldId, previewId, prefix) {
+  const el = document.querySelector(`[name="${fieldId}"]`);
+  const pv = document.getElementById(previewId);
+  if (!el || !pv) return;
+  el.addEventListener('input', () => {
+    pv.textContent = (prefix || '') + (el.value || (prefix ? '0' : fieldId));
+  });
+  el.addEventListener('change', () => {
+    const opt = el.options ? el.options[el.selectedIndex] : null;
+    pv.textContent = opt ? opt.text : el.value;
+  });
+}
+liveUpdate('title',    'pvTitle',    '');
+liveUpdate('price',    'pvPrice',    '₹');
+liveUpdate('category', 'pvCategory', '');
+liveUpdate('location', 'pvLocation', '');
+
+// Price needs input event too
+const priceEl = document.querySelector('[name="price"]');
+if (priceEl) priceEl.addEventListener('input', () => {
+  document.getElementById('pvPrice').textContent = '₹' + (priceEl.value || '0');
+});
+
+// Dynamic subcategory selector
+const SUBCAT_MAP_POST = {
+  clothes:     {tops:'Tops & T-Shirts',shirts:'Shirts & Blouses',jeans:'Jeans & Trousers',dresses:'Dresses & Skirts',jackets:'Jackets & Coats',ethnic:'Ethnic & Traditional',activewear:'Activewear & Sportswear',winterwear:'Winterwear & Sweaters'},
+  books:       {fiction:'Fiction & Novels',nonfiction:'Non-Fiction',textbooks:'Textbooks & Academic',children:"Children's Books",comics:'Comics & Graphic Novels',selfhelp:'Self-Help & Motivation',biography:'Biography & Memoir',science:'Science & Technology'},
+  accessories: {bags:'Bags & Backpacks',jewellery:'Jewellery & Rings',watches:'Watches',belts:'Belts & Wallets',sunglasses:'Sunglasses & Eyewear',footwear:'Footwear & Shoes',caps:'Caps & Hats',scarves:'Scarves & Stoles'},
+};
+const postCatEl  = document.getElementById('id_category');
+const postSubEl  = document.getElementById('id_subcategory');
+const postSubGrp = document.getElementById('subcategoryGroup');
+const editSubVal = "{{ item.subcategory|default:'' }}";
+
+function updatePostSubcats(catVal, selected) {
+  if (!postSubEl || !postSubGrp) return;
+  postSubEl.innerHTML = '<option value="">— Select subcategory —</option>';
+  if (catVal && SUBCAT_MAP_POST[catVal]) {
+    postSubGrp.style.display = '';
+    Object.entries(SUBCAT_MAP_POST[catVal]).forEach(([val, label]) => {
+      const opt = document.createElement('option');
+      opt.value = val; opt.textContent = label;
+      if (val === selected) opt.selected = true;
+      postSubEl.appendChild(opt);
+    });
+  } else {
+    postSubGrp.style.display = 'none';
+  }
+}
+if (postCatEl) {
+  postCatEl.addEventListener('change', () => updatePostSubcats(postCatEl.value, ''));
+  updatePostSubcats(postCatEl.value, editSubVal);
+}
+
+/* ── Gender selector ───────────────────────────── */
+function selectGender(val, el) {
+  document.querySelectorAll('.gender-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  el.querySelector('input').checked = true;
+  document.getElementById('id_gender').value = val;
+}
+
+// Show gender panel only for clothes & accessories
+const genderPanel = document.getElementById('genderPanel');
+function updateGenderVisibility(catVal) {
+  if (catVal === 'clothes' || catVal === 'accessories') {
+    genderPanel.style.display = '';
+  } else {
+    genderPanel.style.display = 'none';
+    document.getElementById('id_gender').value = '';
+    document.querySelectorAll('.gender-opt').forEach(o => o.classList.remove('selected'));
+  }
+}
+if (postCatEl) {
+  postCatEl.addEventListener('change', () => updateGenderVisibility(postCatEl.value));
+  updateGenderVisibility(postCatEl.value);
+}
+// On edit, set the hidden input value from existing selection
+const preSelectedGender = "{{ item.gender|default:'' }}";
+if (preSelectedGender) {
+  document.getElementById('id_gender').value = preSelectedGender;
+}
+</script>
+{% endblock %}

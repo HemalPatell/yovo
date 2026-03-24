@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}My Cart — YOVO{% endblock %}
+{% block content %}
+<div class="cart-page">
+  <div class="container">
+    <h1 class="page-title reveal">My Cart</h1>
+
+    {% if cart.cart_items.all %}
+    <div class="cart-grid">
+      <div class="cart-items reveal">
+        {% for ci in cart.cart_items.all %}
+        <div class="cart-row">
+          <div class="cart-item-img">
+            {% if ci.item.image %}
+            <img src="{{ ci.item.image.url }}" alt="{{ ci.item.title }}" />
+            {% else %}
+            <div class="img-placeholder">{% if ci.item.category == 'clothes' %}👗{% elif ci.item.category == 'accessories' %}👜{% else %}📚{% endif %}</div>
+            {% endif %}
+          </div>
+          <div class="cart-item-info">
+            <a href="{% url 'item_detail' ci.item.pk %}"><strong>{{ ci.item.title }}</strong></a>
+            <span>{{ ci.item.get_category_display }} · 📍 {{ ci.item.get_location_display }}</span>
+            <span>Sold by <a href="{% url 'user_profile' ci.item.seller.username %}">{{ ci.item.seller.username }}</a></span>
+          </div>
+          <div class="cart-item-qty">
+            <span class="qty-label">Qty: 1</span>
+          </div>
+          <div class="cart-item-price">₹{{ ci.get_subtotal }}</div>
+          <a href="{% url 'remove_from_cart' ci.pk %}" class="cart-remove" title="Remove">×</a>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="cart-summary reveal">
+        <div class="summary-card">
+          <h2>Order Summary</h2>
+          <div class="summary-row">
+            <span>Items ({{ cart.get_item_count }})</span>
+            <span>₹{{ subtotal }}</span>
+          </div>
+          <div class="summary-row">
+            <span>Platform Fee (12%)</span>
+            <span>₹{{ platform_fee }}</span>
+          </div>
+          <div class="summary-divider"></div>
+          <div class="summary-row summary-total">
+            <span>Total</span>
+            <span>₹{{ grand_total }}</span>
+          </div>
+          <a href="{% url 'checkout' %}" class="btn btn-primary btn-block btn-lg">Proceed to Checkout</a>
+          <a href="{% url 'home' %}" class="btn btn-ghost btn-block">Continue Shopping</a>
+          <p class="summary-note">🌿 By buying second-hand, you're helping the planet!</p>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="empty-state reveal">
+      <div class="empty-icon">🛒</div>
+      <h3>Your cart is empty</h3>
+      <p>Browse our listings and find something you love</p>
+      <a href="{% url 'home' %}" class="btn btn-primary">Browse Items</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

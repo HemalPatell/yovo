@@ -1,0 +1,273 @@
+{% extends 'base.html' %}
+{% block title %}Sustainability — YOVO{% endblock %}
+
+{% block extra_css %}
+<style>
+.sustain-page { padding: 100px 0 80px; min-height: 100vh; }
+
+/* Hero */
+.sustain-hero {
+  background: linear-gradient(135deg, rgba(58,207,128,.08) 0%, rgba(200,119,58,.06) 100%);
+  border: 1px solid rgba(58,207,128,.15);
+  border-radius: var(--radius-lg);
+  padding: 64px 48px; margin-bottom: 70px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center;
+}
+.sustain-hero-eyebrow {
+  font-size: .68rem; font-weight: 800; letter-spacing: 3px;
+  text-transform: uppercase; color: #2d9e62; display: block; margin-bottom: 14px;
+}
+.sustain-hero h1 {
+  font-family: var(--font-display); font-size: clamp(2rem, 5vw, 3.4rem);
+  font-weight: 400; line-height: 1.15; letter-spacing: -1.5px;
+  color: var(--text); margin-bottom: 18px;
+}
+.sustain-hero h1 em { font-style: italic; color: #2d9e62; }
+.sustain-hero p { color: var(--text-2); line-height: 1.8; font-size: .95rem; }
+.sustain-hero-visual {
+  background: rgba(58,207,128,.08);
+  border: 1px solid rgba(58,207,128,.2);
+  border-radius: var(--radius-lg);
+  aspect-ratio: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 16px;
+}
+.sustain-hero-visual span:first-child { font-size: 4.5rem; }
+.sustain-slogan {
+  font-family: var(--font-display); font-size: 1.2rem;
+  color: #2d9e62; font-weight: 400; text-align: center; line-height: 1.4;
+  padding: 0 16px;
+}
+
+/* Impact numbers */
+.impact-section { margin-bottom: 70px; }
+.impact-section > h2 {
+  font-family: var(--font-display); font-size: 2rem; font-weight: 400;
+  letter-spacing: -1px; text-align: center; margin-bottom: 44px;
+}
+.impact-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.impact-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 32px 24px; text-align: center;
+  position: relative; overflow: hidden;
+}
+.impact-card::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--ic1, #3acf80), var(--ic2, #2d9e62));
+}
+.impact-card:nth-child(1) { --ic1:#3acf80; --ic2:#2db870; }
+.impact-card:nth-child(2) { --ic1:#5080e8; --ic2:#3060c8; }
+.impact-card:nth-child(3) { --ic1:var(--accent); --ic2:#c8773a; }
+.impact-icon { font-size: 2.4rem; margin-bottom: 14px; display: block; }
+.impact-stat {
+  font-family: var(--font-display); font-size: 2.8rem;
+  font-weight: 700; color: var(--text); line-height: 1;
+  margin-bottom: 6px; display: block;
+}
+.impact-label { font-size: .78rem; color: var(--text-2); line-height: 1.6; }
+
+/* Facts */
+.facts-section { margin-bottom: 70px; }
+.facts-section > h2 {
+  font-family: var(--font-display); font-size: 2rem; font-weight: 400;
+  letter-spacing: -1px; margin-bottom: 10px;
+}
+.facts-section > p { color: var(--text-2); margin-bottom: 36px; }
+.facts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.fact-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 26px 24px;
+  display: flex; gap: 18px; align-items: flex-start;
+}
+.fact-icon-wrap {
+  width: 48px; height: 48px; border-radius: 14px; flex-shrink: 0;
+  background: rgba(58,207,128,.1); border: 1px solid rgba(58,207,128,.2);
+  display: flex; align-items: center; justify-content: center; font-size: 1.4rem;
+}
+.fact-card h4 { font-size: .9rem; font-weight: 700; margin-bottom: 6px; }
+.fact-card p  { font-size: .82rem; color: var(--text-2); line-height: 1.65; }
+
+/* How YOVO helps */
+.how-section { margin-bottom: 70px; }
+.how-section > h2 {
+  font-family: var(--font-display); font-size: 2rem; font-weight: 400;
+  letter-spacing: -1px; text-align: center; margin-bottom: 44px;
+}
+.how-steps { display: flex; flex-direction: column; gap: 0; }
+.how-step {
+  display: grid; grid-template-columns: 60px 1fr; gap: 24px;
+  padding: 28px 0; border-bottom: 1px solid var(--border);
+  align-items: center;
+}
+.how-step:last-child { border-bottom: none; }
+.how-step-num {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--grad-accent); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; font-size: 1.1rem; flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(200,119,58,.3);
+}
+.how-step h3 { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+.how-step p  { font-size: .85rem; color: var(--text-2); line-height: 1.65; }
+
+/* Pledge banner */
+.pledge-banner {
+  background: linear-gradient(135deg, #1a3a2a 0%, #2a4a3a 100%);
+  border-radius: var(--radius-lg); padding: 56px 48px; text-align: center;
+  color: #fff; position: relative; overflow: hidden;
+}
+.pledge-banner::before {
+  content: '🌿'; position: absolute; font-size: 12rem; opacity: .04;
+  top: -2rem; right: -2rem; line-height: 1;
+}
+.pledge-banner h2 {
+  font-family: var(--font-display); font-size: 2.2rem; font-weight: 400;
+  margin-bottom: 14px; position: relative;
+}
+.pledge-banner p {
+  opacity: .8; max-width: 520px; margin: 0 auto 28px; line-height: 1.75;
+  position: relative;
+}
+.pledge-btn {
+  background: #3acf80; color: #fff; font-weight: 700;
+  padding: 14px 36px; border-radius: 12px; text-decoration: none;
+  font-size: .9rem; transition: all .2s; position: relative;
+  display: inline-block;
+  box-shadow: 0 4px 20px rgba(58,207,128,.35);
+}
+.pledge-btn:hover { background: #2db870; transform: translateY(-2px); }
+
+@media (max-width: 860px) {
+  .sustain-hero { grid-template-columns: 1fr; }
+  .impact-grid  { grid-template-columns: 1fr; }
+  .facts-grid   { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sustain-page">
+  <div class="container">
+
+    <!-- Hero -->
+    <div class="sustain-hero reveal">
+      <div>
+        <span class="sustain-hero-eyebrow">Our Commitment</span>
+        <h1>Fashion that doesn't<br><em>cost the earth.</em></h1>
+        <p>The fashion industry is responsible for 10% of annual global carbon emissions — more than aviation and shipping combined. At YOVO, every transaction is a small act of resistance against throwaway culture.</p>
+      </div>
+      <div class="sustain-hero-visual">
+        <span>🌍</span>
+        <span class="sustain-slogan">"The most sustainable<br>garment is the one<br>you already own."</span>
+      </div>
+    </div>
+
+    <!-- Impact Numbers -->
+    <div class="impact-section">
+      <h2 class="reveal">Why circular fashion matters</h2>
+      <div class="impact-grid">
+        <div class="impact-card reveal">
+          <span class="impact-icon">💧</span>
+          <span class="impact-stat">7,500L</span>
+          <span class="impact-label">of water is used to make a single pair of jeans — enough for one person to drink for 7 years</span>
+        </div>
+        <div class="impact-card reveal">
+          <span class="impact-icon">🏭</span>
+          <span class="impact-stat">10%</span>
+          <span class="impact-label">of global CO₂ emissions come from the fashion industry — more than all flights and ships combined</span>
+        </div>
+        <div class="impact-card reveal">
+          <span class="impact-icon">🗑</span>
+          <span class="impact-stat">85%</span>
+          <span class="impact-label">of all textiles end up in landfills each year — only 15% are donated or recycled</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fast Facts -->
+    <div class="facts-section">
+      <h2 class="reveal">The real cost of fast fashion & accessories</h2>
+      <p class="reveal">Facts that should make you think twice before buying new.</p>
+      <div class="facts-grid">
+        <div class="fact-card reveal">
+          <div class="fact-icon-wrap">👔</div>
+          <div>
+            <h4>Clothes worn only 7-10 times</h4>
+            <p>The average garment in India is worn fewer than 10 times before being discarded. Extending wear to just 30 uses cuts its footprint by over 60%.</p>
+          </div>
+        </div>
+        <div class="fact-card reveal">
+          <div class="fact-icon-wrap">📚</div>
+          <div>
+            <h4>Textbooks: one semester, landfill</h4>
+            <p>A university textbook uses 3–4 kg of paper and significant energy to produce, yet most are discarded or abandoned after a single semester.</p>
+          </div>
+        </div>
+        <div class="fact-card reveal">
+          <div class="fact-icon-wrap">👜</div>
+          <div>
+            <h4>Accessories: bought once, forgotten fast</h4>
+            <p>Bags, watches, and jewellery are among the most underused items owned. Most accessories are used fewer than 5 times before being shelved or discarded.</p>
+          </div>
+        </div>
+        <div class="fact-card reveal">
+          <div class="fact-icon-wrap">🌡</div>
+          <div>
+            <h4>Secondhand = lower carbon</h4>
+            <p>Buying one secondhand item instead of new saves an average of 3 kg of CO₂ — the equivalent of driving a car 12 km.</p>
+          </div>
+        </div>
+        <div class="fact-card reveal">
+          <div class="fact-icon-wrap">💸</div>
+          <div>
+            <h4>You save money too</h4>
+            <p>Students who buy and sell on pre-loved platforms save an average of ₹4,000–8,000 per semester compared to buying everything new.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- How YOVO helps -->
+    <div class="how-section">
+      <h2 class="reveal">How YOVO helps 🌿</h2>
+      <div class="how-steps">
+        <div class="how-step reveal">
+          <div class="how-step-num">1</div>
+          <div>
+            <h3>Small platform fee, big seller value</h3>
+            <p>We charge a modest 12% platform fee — far below the 30–40% taken by most major marketplaces. That means sellers keep the lion's share of every sale, so they're far more likely to list instead of throw away.</p>
+          </div>
+        </div>
+        <div class="how-step reveal">
+          <div class="how-step-num">2</div>
+          <div>
+            <h3>Photo verification builds trust</h3>
+            <p>Up to 5 photos per listing + optional bill upload means buyers see exactly what they're getting. More trust = more successful sales = fewer items wasted.</p>
+          </div>
+        </div>
+        <div class="how-step reveal">
+          <div class="how-step-num">3</div>
+          <div>
+            <h3>Hyper-local by design</h3>
+            <p>Our location filter keeps exchanges local — less packaging, no courier, smaller carbon footprint. Ahmedabad to Ahmedabad, not Ahmedabad to a warehouse to Delhi.</p>
+          </div>
+        </div>
+        <div class="how-step reveal">
+          <div class="how-step-num">4</div>
+          <div>
+            <h3>Community accountability</h3>
+            <p>Real usernames, real chat, Q&A on listings. When people transact as themselves — not anonymously — they take more care. That means better condition items changing hands.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pledge -->
+    <div class="pledge-banner reveal">
+      <h2>Join the circular economy 🌱</h2>
+      <p>Every item you buy or sell on YOVO is a vote for a world where good things last longer. Start today — it's free.</p>
+      <a href="{% url 'home' %}" class="pledge-btn">Browse Pre-Loved Items →</a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

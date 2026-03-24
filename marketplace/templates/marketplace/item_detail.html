@@ -1,0 +1,600 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ item.title }} — YOVO{% endblock %}
+
+{% block extra_css %}
+<style>
+.detail-page { padding: 100px 0 80px; min-height: 100vh; background: var(--bg); }
+.back-link { display:inline-flex;align-items:center;gap:6px;color:var(--text-2);text-decoration:none;font-size:0.875rem;margin-bottom:28px;transition:color var(--transition); }
+.back-link:hover { color:var(--accent); }
+
+/* ── Layout ─────────────────────────────────── */
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 440px;
+  gap: 40px;
+  align-items: start;
+}
+
+/* ── Gallery ────────────────────────────────── */
+.gallery-wrap { position: sticky; top: 90px; }
+.gallery-main {
+  width: 100%; aspect-ratio: 4/3;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--bg-2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 5rem;
+  position: relative;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 10px;
+  cursor: zoom-in;
+  user-select: none;
+}
+.gallery-main.zoomed { cursor: grab; }
+.gallery-main.zoomed:active { cursor: grabbing; }
+.gallery-main img {
+  width: 100%; height: 100%; object-fit: cover;
+  transform-origin: center center;
+  transform: scale(1) translate(0px, 0px);
+  transition: transform 0.25s ease;
+  pointer-events: none;
+  will-change: transform;
+}
+.gallery-main img.panning { transition: none; }
+
+/* Zoom controls bar */
+.zoom-controls {
+  position: absolute;
+  bottom: 12px; right: 12px;
+  display: flex; align-items: center; gap: 6px;
+  z-index: 10;
+}
+.zoom-btn {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #fff;
+  font-size: 1.1rem;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  line-height: 1;
+}
+.zoom-btn:hover { background: var(--accent); transform: scale(1.1); }
+.zoom-btn:active { transform: scale(0.95); }
+.zoom-label {
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 20px;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  min-width: 42px;
+  text-align: center;
+  letter-spacing: 0.03em;
+}
+
+/* Lightbox overlay */
+.img-lightbox {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.92);
+  z-index: 9999;
+  align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.img-lightbox.open { display: flex; }
+.img-lightbox img {
+  max-width: 92vw; max-height: 88vh;
+  border-radius: 10px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  object-fit: contain;
+  cursor: zoom-out;
+}
+.lightbox-close {
+  position: absolute; top: 18px; right: 22px;
+  color: #fff; font-size: 2rem; cursor: pointer;
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  transition: background 0.15s;
+}
+.lightbox-close:hover { background: rgba(255,255,255,0.2); }
+.sold-overlay {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 2.5rem; font-weight: 900;
+  letter-spacing: 4px;
+  border-radius: var(--radius-lg);
+}
+.gallery-thumbs {
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.gallery-thumb {
+  width: 72px; height: 72px;
+  border-radius: var(--radius-sm);
+  overflow: hidden; cursor: pointer;
+  border: 2px solid var(--border);
+  transition: all var(--transition);
+  background: var(--bg-2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem;
+}
+.gallery-thumb img { width:100%;height:100%;object-fit:cover; }
+.gallery-thumb:hover, .gallery-thumb.active { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(200,119,58,0.25); }
+
+/* ── Info panel ──────────────────────────────── */
+.detail-info { display:flex;flex-direction:column;gap:20px; }
+
+.detail-top-badges { display:flex;align-items:center;gap:8px;flex-wrap:wrap; }
+.cat-badge {
+  padding: 4px 12px; border-radius: 999px;
+  font-size: 0.75rem; font-weight: 700;
+  background: var(--bg-2); border: 1px solid var(--border);
+  color: var(--text-2);
+}
+.sold-badge {
+  padding: 4px 12px; border-radius: 999px;
+  font-size: 0.75rem; font-weight: 700;
+  background: rgba(200,57,58,0.1); color: var(--danger);
+  border: 1px solid rgba(200,57,58,0.2);
+}
+
+.detail-title { font-family: var(--font-display); font-size: 1.9rem; line-height: 1.25; color: var(--text); }
+.detail-price { font-family: var(--font-display); font-size: 2.4rem; font-weight: 700; color: var(--accent); }
+
+/* Condition badge */
+.condition-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 16px; border-radius: var(--radius);
+  font-size: 0.875rem; font-weight: 600;
+  border: 1.5px solid;
+}
+.cond-new      { background: rgba(58,156,104,0.1); color:#2d7a52; border-color: rgba(58,156,104,0.25); }
+.cond-like_new { background: rgba(58,120,200,0.1); color:#2558a0; border-color: rgba(58,120,200,0.25); }
+.cond-good     { background: rgba(200,119,58,0.1); color:var(--accent); border-color: rgba(200,119,58,0.25); }
+.cond-fair     { background: rgba(245,158,11,0.1); color:#b45309; border-color: rgba(245,158,11,0.25); }
+.cond-worn     { background: rgba(156,152,143,0.1); color:#5c5852; border-color: rgba(156,152,143,0.2); }
+
+.detail-desc { font-size: 0.9rem; line-height: 1.7; color: var(--text-2); white-space: pre-line; }
+
+/* Meta rows */
+.detail-meta { display:flex;flex-direction:column;gap:10px; }
+.meta-row    { display:flex;align-items:center;gap:10px;font-size:0.875rem;color:var(--text-2); }
+.meta-row a  { color:var(--accent);font-weight:600;text-decoration:none; }
+.meta-row a:hover { text-decoration:underline; }
+.meta-icon   { font-size:1rem;flex-shrink:0; }
+
+/* Bill badge */
+.bill-badge-row {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(58,156,104,0.08);
+  border: 1px solid rgba(58,156,104,0.2);
+  border-radius: var(--radius);
+  padding: 10px 14px; font-size: 0.82rem;
+  color: #2d7a52; font-weight: 600;
+}
+.bill-view-link { color: #2d7a52; text-decoration: underline; cursor: pointer; }
+
+/* Actions */
+.detail-actions { display:flex;flex-direction:column;gap:10px; }
+.detail-actions .btn { justify-content:center; }
+
+/* Seller card */
+.seller-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  display: flex; align-items: center; gap: 14px;
+  box-shadow: var(--shadow-sm);
+}
+.seller-av {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: var(--grad-accent); color: #fff;
+  font-size: 1.2rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.seller-name { font-weight: 700; font-size: 0.9rem; margin-bottom: 2px; }
+.seller-sub  { font-size: 0.75rem; color: var(--text-3); }
+.seller-card a { margin-left: auto; flex-shrink: 0; }
+
+/* Owner actions */
+.owner-actions {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  padding: 14px 16px;
+  background: rgba(200,119,58,0.06);
+  border: 1px solid rgba(200,119,58,0.15);
+  border-radius: var(--radius);
+}
+
+/* Related */
+.related-section { margin-top: 60px; }
+.related-section h2 { font-size: 1.5rem; margin-bottom: 20px; }
+.related-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+
+/* Bill modal */
+.bill-modal-overlay { display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.75);align-items:center;justify-content:center;backdrop-filter:blur(4px); }
+.bill-modal-overlay.show { display:flex; }
+.bill-modal { background:var(--bg-card);border-radius:var(--radius-lg);padding:24px;max-width:600px;width:90%;max-height:90vh;overflow:auto;box-shadow:var(--shadow-xl); }
+.bill-modal img { width:100%;border-radius:var(--radius);margin-top:12px; }
+
+@media (max-width:900px) {
+  .detail-grid { grid-template-columns:1fr; }
+  .gallery-wrap { position:static; }
+  .related-grid { grid-template-columns:repeat(2,1fr); }
+}
+@media (max-width:500px) {
+  .related-grid { grid-template-columns:repeat(2,1fr); }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-page">
+  <div class="container">
+    <a href="{% url 'home' %}" class="back-link">← Back to Browse</a>
+
+    <div class="detail-grid">
+
+      <!-- ── Gallery ─────────────────────────────── -->
+      <div class="gallery-wrap reveal">
+        <div class="gallery-main" id="galleryMain">
+          {% if item.image %}
+          <img src="{{ item.image.url }}" alt="{{ item.title }}" id="mainImg" />
+          {% else %}
+          <span>{% if item.category == 'clothes' %}👗{% elif item.category == 'accessories' %}👜{% else %}📚{% endif %}</span>
+          {% endif %}
+          {% if item.is_sold %}<div class="sold-overlay">SOLD</div>{% endif %}
+
+          <!-- Zoom Controls -->
+          <div class="zoom-controls">
+            <button class="zoom-btn" id="zoomOut" title="Zoom out">−</button>
+            <span class="zoom-label" id="zoomLabel">100%</span>
+            <button class="zoom-btn" id="zoomIn" title="Zoom in">+</button>
+            <button class="zoom-btn" id="zoomReset" title="Reset zoom" style="font-size:0.8rem;">↺</button>
+          </div>
+        </div>
+
+        {% if all_images|length > 1 %}
+        <div class="gallery-thumbs">
+          {% for img in all_images %}
+          <div class="gallery-thumb {% if forloop.first %}active{% endif %}" onclick="switchPhoto('{{ img.url }}', this)">
+            <img src="{{ img.url }}" alt="Photo {{ forloop.counter }}" />
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+
+<!-- Lightbox -->
+<div class="img-lightbox" id="imgLightbox">
+  <div class="lightbox-close" id="lightboxClose">✕</div>
+  <img id="lightboxImg" src="" alt="Full view" />
+</div>
+
+      <!-- ── Info ────────────────────────────────── -->
+      <div class="detail-info reveal">
+
+        <div class="detail-top-badges">
+          <a href="{% url 'category' item.category %}" class="cat-badge">{% if item.category == 'clothes' %}👗{% elif item.category == 'accessories' %}👜{% else %}📚{% endif %} {{ item.get_category_display }}</a>
+          {% if item.is_sold %}<span class="sold-badge">✕ Sold</span>{% endif %}
+        </div>
+
+        <h1 class="detail-title">{{ item.title }}</h1>
+        <div class="detail-price">₹{{ item.price }}</div>
+
+        <!-- Condition -->
+        <div>
+          <p style="font-size:0.75rem;font-weight:600;color:var(--text-3);margin-bottom:6px;">CONDITION</p>
+          <span class="condition-badge cond-{{ item.condition }}">
+            {% if item.condition == 'new' %}✨
+            {% elif item.condition == 'like_new' %}🌟
+            {% elif item.condition == 'good' %}👍
+            {% elif item.condition == 'fair' %}👌
+            {% else %}🔧{% endif %}
+            {{ item.get_condition_display }}
+          </span>
+        </div>
+
+        <!-- Description -->
+        <div>
+          <p style="font-size:0.75rem;font-weight:600;color:var(--text-3);margin-bottom:6px;">DESCRIPTION</p>
+          <p class="detail-desc">{{ item.description }}</p>
+        </div>
+
+        <!-- Meta -->
+        <div class="detail-meta">
+          <div class="meta-row"><span class="meta-icon">📍</span><span>{{ item.get_location_display }}</span></div>
+          {% if item.gender %}<div class="meta-row"><span class="meta-icon">{{ item.get_gender_icon }}</span><span>{{ item.get_gender_display }}</span></div>{% endif %}
+          <div class="meta-row"><span class="meta-icon">🕐</span><span>Listed {{ item.created_at|timesince }} ago</span></div>
+        </div>
+
+        <!-- Bill badge -->
+        {% if item.bill %}
+        <div class="bill-badge-row">
+          <span>🧾</span>
+          <span>Bill / Receipt available</span>
+          <span class="bill-view-link" onclick="document.getElementById('billModal').classList.add('show')">View Bill →</span>
+        </div>
+        {% endif %}
+
+        <!-- Seller card -->
+        <div class="seller-card">
+          <div class="seller-av">{{ item.seller.username|first|upper }}</div>
+          <div>
+            <div class="seller-name">{{ item.seller.get_full_name|default:item.seller.username }}</div>
+            <div class="seller-sub">@{{ item.seller.username }} · Listed {{ item.created_at|timesince }} ago</div>
+          </div>
+          <a href="{% url 'user_profile' item.seller.username %}" class="btn btn-ghost btn-sm">View Profile</a>
+        </div>
+
+        <!-- Actions -->
+        {% if not item.is_sold %}
+          {% if user.is_authenticated %}
+            {% if user != item.seller %}
+            <!-- Buyer actions -->
+            <div class="detail-actions">
+              <a href="{% url 'toggle_wishlist' item.pk %}" class="btn btn-outline btn-lg btn-block {% if is_wishlisted %}btn-wishlist-active{% endif %}">
+                {% if is_wishlisted %}♥ Remove from Wishlist{% else %}♡ Add to Wishlist{% endif %}
+              </a>
+              <a href="{% url 'add_to_cart' item.pk %}" class="btn btn-primary btn-lg btn-block">🛒 Add to Cart</a>
+              <a href="{% url 'chat' item.pk item.seller.pk %}" class="btn btn-outline btn-lg btn-block">💬 Chat with Seller</a>
+            </div>
+            {% else %}
+            <!-- Owner actions -->
+            <div class="owner-actions">
+              <a href="{% url 'edit_item' item.pk %}" class="btn btn-primary">✏️ Edit Listing</a>
+              <a href="{% url 'mark_sold' item.pk %}" class="btn btn-ghost">✓ Mark as Sold</a>
+              <a href="{% url 'delete_item' item.pk %}" class="btn btn-danger" onclick="return confirm('Delete this listing?')">🗑 Delete</a>
+            </div>
+            {% endif %}
+          {% else %}
+          <div class="detail-actions">
+            <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary btn-lg btn-block">Login to Buy or Chat</a>
+          </div>
+          {% endif %}
+        {% else %}
+        <div style="background:rgba(200,57,58,0.08);border:1px solid rgba(200,57,58,0.2);border-radius:var(--radius);padding:14px 16px;text-align:center;color:var(--danger);font-weight:600;">
+          This item has been sold.
+        </div>
+        {% endif %}
+
+      </div><!-- end detail-info -->
+    </div><!-- end detail-grid -->
+
+    <!-- ── Q & A Section ──────────────────────── -->
+    <div class="reveal" style="margin-top:40px;">
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm);">
+        <div style="padding:18px 24px;border-bottom:1px solid var(--border);background:var(--bg);display:flex;align-items:center;justify-content:space-between;">
+          <h2 style="font-size:1rem;font-family:var(--font-body);font-weight:700;">❓ Questions & Answers ({{ item.questions.count }})</h2>
+        </div>
+
+        <!-- Ask a question -->
+        {% if user.is_authenticated and user != item.seller %}
+        <div style="padding:18px 24px;border-bottom:1px solid var(--border);background:rgba(200,119,58,0.03);">
+          <form method="POST" action="{% url 'ask_question' item.pk %}" style="display:flex;gap:10px;align-items:flex-end;">
+            {% csrf_token %}
+            <div style="flex:1;">
+              <label style="font-size:0.78rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:6px;">Ask the seller a question</label>
+              <input type="text" name="content" class="form-input" placeholder="e.g. What is the exact size? Any defects?" required />
+            </div>
+            <button type="submit" class="btn btn-primary" style="white-space:nowrap;">Ask →</button>
+          </form>
+        </div>
+        {% elif not user.is_authenticated %}
+        <div style="padding:16px 24px;background:var(--bg-2);border-bottom:1px solid var(--border);font-size:0.875rem;color:var(--text-2);">
+          <a href="{% url 'login' %}?next={{ request.path }}" style="color:var(--accent);font-weight:600;">Login</a> to ask the seller a question.
+        </div>
+        {% endif %}
+
+        <!-- Questions list -->
+        {% if item.questions.all %}
+          {% for q in item.questions.all %}
+          <div style="padding:18px 24px;border-bottom:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px;">
+              <div style="display:flex;gap:10px;align-items:flex-start;flex:1;">
+                <div style="width:32px;height:32px;border-radius:50%;background:var(--grad-accent);color:#fff;font-weight:700;font-size:0.8rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;">{{ q.asker.username|first|upper }}</div>
+                <div>
+                  <span style="font-weight:600;font-size:0.8rem;">{{ q.asker.get_full_name|default:q.asker.username }}</span>
+                  <span style="font-size:0.72rem;color:var(--text-3);margin-left:8px;">{{ q.created_at|timesince }} ago</span>
+                  <p style="margin-top:4px;font-size:0.875rem;color:var(--text);">{{ q.content }}</p>
+                </div>
+              </div>
+              {% if user == q.asker or user == item.seller %}
+              <a href="{% url 'delete_question' q.pk %}" style="color:var(--text-3);font-size:0.75rem;text-decoration:none;" onclick="return confirm('Delete this question?')">🗑</a>
+              {% endif %}
+            </div>
+            {% if q.answer %}
+            <div style="margin-left:42px;background:rgba(58,156,104,0.07);border-left:3px solid var(--success);padding:10px 14px;border-radius:0 var(--radius-sm) var(--radius-sm) 0;">
+              <span style="font-size:0.72rem;font-weight:700;color:#2d7a52;">✅ Seller's Answer:</span>
+              <p style="font-size:0.875rem;color:var(--text);margin-top:4px;">{{ q.answer }}</p>
+              <span style="font-size:0.68rem;color:var(--text-3);">{{ q.answered_at|timesince }} ago</span>
+            </div>
+            {% elif user == item.seller %}
+            <div style="margin-left:42px;margin-top:8px;">
+              <form method="POST" action="{% url 'answer_question' q.pk %}" style="display:flex;gap:8px;">
+                {% csrf_token %}
+                <input type="text" name="answer" class="form-input" placeholder="Write your answer…" style="flex:1;font-size:0.82rem;" required />
+                <button type="submit" class="btn btn-sm btn-primary">Answer</button>
+              </form>
+            </div>
+            {% else %}
+            <div style="margin-left:42px;margin-top:6px;font-size:0.78rem;color:var(--text-3);font-style:italic;">⏳ Awaiting seller's answer…</div>
+            {% endif %}
+          </div>
+          {% endfor %}
+        {% else %}
+        <div style="padding:40px 24px;text-align:center;color:var(--text-3);">
+          <div style="font-size:2rem;margin-bottom:8px;">❓</div>
+          <p style="font-size:0.875rem;">No questions yet. Be the first to ask!</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% if related %}
+    <div class="related-section reveal">
+      <h2>More <a href="{% url 'category' item.category %}" style="color:var(--accent);text-decoration:none;">{{ item.get_category_display }}</a></h2>
+      <div class="related-grid">
+        {% for rel in related %}
+        <a href="{% url 'item_detail' rel.pk %}" class="item-card" style="text-decoration:none;">
+          <div class="item-card-img">
+            {% if rel.image %}<img src="{{ rel.image.url }}" alt="{{ rel.title }}" />
+            {% else %}<span>{% if rel.category == 'clothes' %}👗{% elif rel.category == 'accessories' %}👜{% else %}📚{% endif %}</span>{% endif %}
+          </div>
+          <div class="item-card-body">
+            <div class="item-card-title">{{ rel.title }}</div>
+            <div class="item-card-price">₹{{ rel.price }}</div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div><!-- end container -->
+</div>
+
+<!-- Bill Modal -->
+{% if item.bill %}
+<div class="bill-modal-overlay" id="billModal" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="bill-modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h3 style="font-family:var(--font-body);font-size:1rem;font-weight:700;">🧾 Bill / Receipt</h3>
+      <button onclick="document.getElementById('billModal').classList.remove('show')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--text-2);">✕</button>
+    </div>
+    <img src="{{ item.bill.url }}" alt="Bill" />
+  </div>
+</div>
+{% endif %}
+
+<script>
+// ── Gallery switcher ──────────────────────────────────────
+function switchPhoto(url, thumb) {
+  const img = document.getElementById('mainImg');
+  if (img) { img.src = url; resetZoom(); }
+  document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
+  thumb.classList.add('active');
+}
+
+// ── Zoom & Pan ───────────────────────────────────────────
+const ZOOM_STEP = 0.3;
+const ZOOM_MIN  = 1;
+const ZOOM_MAX  = 4;
+
+let zoomLevel = 1;
+let panX = 0, panY = 0;
+let isPanning = false;
+let startX = 0, startY = 0;
+
+const mainImg   = document.getElementById('mainImg');
+const galleryEl = document.getElementById('galleryMain');
+const zoomLabel = document.getElementById('zoomLabel');
+
+function clampPan() {
+  if (!mainImg || !galleryEl) return;
+  const overflow = ((zoomLevel - 1) / 2);
+  const maxPanX  = galleryEl.clientWidth  * overflow;
+  const maxPanY  = galleryEl.clientHeight * overflow;
+  panX = Math.max(-maxPanX, Math.min(maxPanX, panX));
+  panY = Math.max(-maxPanY, Math.min(maxPanY, panY));
+}
+
+function applyTransform(animate = true) {
+  if (!mainImg) return;
+  if (!animate) mainImg.classList.add('panning');
+  else mainImg.classList.remove('panning');
+  mainImg.style.transform = `scale(${zoomLevel}) translate(${panX / zoomLevel}px, ${panY / zoomLevel}px)`;
+  if (zoomLabel) zoomLabel.textContent = Math.round(zoomLevel * 100) + '%';
+  if (galleryEl) galleryEl.classList.toggle('zoomed', zoomLevel > 1);
+}
+
+function setZoom(val) {
+  const prev = zoomLevel;
+  zoomLevel = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, val));
+  if (zoomLevel === 1) { panX = 0; panY = 0; }
+  else { panX *= zoomLevel / prev; panY *= zoomLevel / prev; clampPan(); }
+  applyTransform();
+}
+
+function resetZoom() { zoomLevel = 1; panX = 0; panY = 0; applyTransform(); }
+
+// Buttons
+document.getElementById('zoomIn')   ?.addEventListener('click', e => { e.stopPropagation(); setZoom(zoomLevel + ZOOM_STEP); });
+document.getElementById('zoomOut')  ?.addEventListener('click', e => { e.stopPropagation(); setZoom(zoomLevel - ZOOM_STEP); });
+document.getElementById('zoomReset')?.addEventListener('click', e => { e.stopPropagation(); resetZoom(); });
+
+// Mouse wheel zoom
+galleryEl?.addEventListener('wheel', e => {
+  e.preventDefault();
+  const delta = e.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP;
+  setZoom(zoomLevel + delta);
+}, { passive: false });
+
+// Click to open lightbox when not zoomed
+galleryEl?.addEventListener('click', e => {
+  if (zoomLevel > 1) return;
+  if (e.target.closest('.zoom-btn')) return;
+  const src = mainImg?.src;
+  if (!src || src.endsWith('undefined')) return;
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('imgLightbox').classList.add('open');
+});
+
+// Drag to pan when zoomed
+galleryEl?.addEventListener('mousedown', e => {
+  if (zoomLevel <= 1) return;
+  if (e.target.closest('.zoom-btn')) return;
+  isPanning = true;
+  startX = e.clientX - panX;
+  startY = e.clientY - panY;
+  e.preventDefault();
+});
+window.addEventListener('mousemove', e => {
+  if (!isPanning) return;
+  panX = e.clientX - startX;
+  panY = e.clientY - startY;
+  clampPan();
+  applyTransform(false);
+});
+window.addEventListener('mouseup', () => {
+  if (isPanning) { isPanning = false; mainImg?.classList.remove('panning'); }
+});
+
+// Touch pinch-to-zoom + drag
+let lastDist = 0, touchStartX = 0, touchStartY = 0;
+galleryEl?.addEventListener('touchstart', e => {
+  if (e.touches.length === 2) {
+    lastDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+  } else if (e.touches.length === 1 && zoomLevel > 1) {
+    touchStartX = e.touches[0].clientX - panX;
+    touchStartY = e.touches[0].clientY - panY;
+  }
+}, { passive: true });
+galleryEl?.addEventListener('touchmove', e => {
+  if (e.touches.length === 2) {
+    e.preventDefault();
+    const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+    setZoom(zoomLevel * (dist / lastDist));
+    lastDist = dist;
+  } else if (e.touches.length === 1 && zoomLevel > 1) {
+    panX = e.touches[0].clientX - touchStartX;
+    panY = e.touches[0].clientY - touchStartY;
+    clampPan(); applyTransform(false);
+  }
+}, { passive: false });
+
+// Lightbox close
+document.getElementById('lightboxClose')?.addEventListener('click', () => document.getElementById('imgLightbox').classList.remove('open'));
+document.getElementById('imgLightbox')  ?.addEventListener('click', e => { if (e.target === e.currentTarget || e.target.id === 'lightboxImg') e.currentTarget.classList.remove('open'); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('imgLightbox')?.classList.remove('open'); });
+</script>
+{% endblock %}

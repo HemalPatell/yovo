@@ -1,0 +1,418 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}FAQ — YOVO{% endblock %}
+
+{% block extra_css %}
+<style>
+.faq-page { padding: 100px 0 80px; min-height: 100vh; }
+
+.faq-hero {
+  text-align: center; margin-bottom: 56px;
+}
+.faq-hero h1 { font-size: 2.5rem; margin-bottom: 12px; }
+.faq-hero p  { font-size: 1rem; color: var(--text-2); max-width: 500px; margin: 0 auto; }
+
+/* Search bar */
+.faq-search-wrap { max-width: 480px; margin: 24px auto 0; position: relative; }
+.faq-search {
+  width: 100%; padding: 14px 20px 14px 48px;
+  border: 1.5px solid var(--border); border-radius: 999px;
+  background: var(--bg-card); font-size: 0.9rem;
+  color: var(--text); outline: none; font-family: var(--font-body);
+  transition: border-color var(--transition);
+}
+.faq-search:focus { border-color: var(--accent); }
+.faq-search-icon {
+  position: absolute; left: 16px; top: 50%;
+  transform: translateY(-50%); font-size: 1.1rem; pointer-events: none;
+}
+
+/* Category tabs */
+.faq-tabs {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  justify-content: center; margin-bottom: 36px;
+}
+.faq-tab {
+  padding: 8px 18px; border-radius: 999px;
+  border: 1.5px solid var(--border);
+  background: var(--bg-card); color: var(--text-2);
+  font-size: 0.82rem; font-weight: 600; cursor: pointer;
+  transition: all var(--transition);
+}
+.faq-tab.active, .faq-tab:hover {
+  border-color: var(--accent); color: var(--accent);
+  background: rgba(200,119,58,0.08);
+}
+
+/* FAQ items */
+.faq-section { max-width: 760px; margin: 0 auto; margin-bottom: 48px; }
+.faq-section-title {
+  font-size: 0.75rem; font-weight: 700; color: var(--text-3);
+  text-transform: uppercase; letter-spacing: 0.8px;
+  margin-bottom: 14px;
+}
+.faq-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 8px;
+  overflow: hidden;
+  transition: all var(--transition);
+}
+.faq-item:hover { border-color: rgba(200,119,58,0.3); }
+.faq-item.open  { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(200,119,58,0.08); }
+
+.faq-q {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 20px; cursor: pointer; gap: 12px;
+  user-select: none;
+}
+.faq-q-text { font-weight: 600; font-size: 0.9rem; flex: 1; }
+.faq-chevron {
+  font-size: 0.8rem; color: var(--text-3); flex-shrink: 0;
+  transition: transform 0.25s;
+}
+.faq-item.open .faq-chevron { transform: rotate(180deg); color: var(--accent); }
+
+.faq-a {
+  display: none;
+  padding: 0 20px 18px;
+  font-size: 0.875rem; line-height: 1.75; color: var(--text-2);
+  border-top: 1px solid var(--border);
+}
+.faq-a.open { display: block; }
+.faq-a a { color: var(--accent); }
+.faq-a strong { color: var(--text); }
+
+/* Contact CTA */
+.faq-contact {
+  text-align: center; max-width: 480px; margin: 0 auto;
+  padding: 40px 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+.faq-contact-icon { font-size: 3rem; margin-bottom: 14px; }
+.faq-contact h2   { font-size: 1.3rem; margin-bottom: 8px; }
+.faq-contact p    { color: var(--text-2); font-size: 0.875rem; margin-bottom: 20px; }
+
+.no-results { text-align:center;padding:40px;color:var(--text-3);display:none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="faq-page">
+  <div class="container">
+
+    <!-- Hero -->
+    <div class="faq-hero reveal">
+      <h1>❓ Frequently Asked Questions</h1>
+      <p>Everything you need to know about buying and selling on YOVO.</p>
+      <div class="faq-search-wrap">
+        <span class="faq-search-icon">🔍</span>
+        <input type="text" class="faq-search" id="faqSearch" placeholder="Search questions…" oninput="filterFAQ(this.value)" />
+      </div>
+    </div>
+
+    <!-- Category Tabs -->
+    <div class="faq-tabs reveal">
+      <button class="faq-tab active" onclick="filterCategory('all',this)">All Questions</button>
+      <button class="faq-tab" onclick="filterCategory('buying',this)">🛒 Buying</button>
+      <button class="faq-tab" onclick="filterCategory('selling',this)">📸 Selling</button>
+      <button class="faq-tab" onclick="filterCategory('payment',this)">💳 Payment</button>
+      <button class="faq-tab" onclick="filterCategory('orders',this)">📦 Orders</button>
+      <button class="faq-tab" onclick="filterCategory('account',this)">👤 Account</button>
+    </div>
+
+    <!-- BUYING -->
+    <div class="faq-section reveal" data-category="buying">
+      <div class="faq-section-title">🛒 Buying</div>
+
+      <div class="faq-item" data-category="buying">
+        <div class="faq-q" onclick="toggleFAQ(this)">
+          <span class="faq-q-text">How do I buy an item on YOVO?</span>
+          <span class="faq-chevron">▼</span>
+        </div>
+        <div class="faq-a">
+          Browse items on the homepage, click an item to view details, then click <strong>"Add to Cart"</strong>. Go to your cart and proceed to checkout. Fill in your delivery details and choose a payment method to place your order.
+        </div>
+      </div>
+
+      <div class="faq-item" data-category="buying">
+        <div class="faq-q" onclick="toggleFAQ(this)">
+          <span class="faq-q-text">Can I ask questions about an item before buying?</span>
+          <span class="faq-chevron">▼</span>
+        </div>
+        <div class="faq-a">
+          Yes! On any item's detail page, scroll down to the <strong>Questions</strong> section and type your question. The seller will be notified and can reply. You can also click <strong>"Chat with Seller"</strong> for a real-time private conversation.
+        </div>
+      </div>
+
+      <div class="faq-item" data-category="buying">
+        <div class="faq-q" onclick="toggleFAQ(this)">
+          <span class="faq-q-text">How do I know the item's condition?</span>
+          <span class="faq-chevron">▼</span>
+        </div>
+        <div class="faq-a">
+          Every listing shows a <strong>condition badge</strong> (New / Like New / Good / Fair / Worn). Sellers are also required to write a description. If a seller has uploaded a bill or receipt, a <strong>"Bill Available"</strong> badge is shown — click it to view the original purchase proof.
+        </div>
+      </div>
+
+      <div class="faq-item" data-category="buying">
+        <div class="faq-q" onclick="toggleFAQ(this)">
+          <span class="faq-q-text">Can I return an item?</span>
+          <span class="faq-chevron">▼</span>
+        </div>
+        <div class="faq-a">
+          YOVO is a peer-to-peer marketplace. Returns depend on your agreement with the individual seller. We strongly recommend chatting with the seller before buying to clarify return policies. Always check the photos and condition rating carefully before purchasing.
+        </div>
+      </div>
+    </div>
+
+    <!-- SELLING -->
+    <div class="faq-section reveal" data-category="selling">
+      <div class="faq-section-title">📸 Selling</div>
+
+      <div class="faq-item" data-category="selling">
+        <div class="faq-q" onclick="toggleFAQ(this)">
+          <span class="faq-q-text">How do I list an item for sale?</span>
+          <span class="faq-chevron">▼</span>
+        </div>
+        <div class="faq-a">
+          Click <strong>"Sell"</strong> in the navigation bar (you must be logged in). Fill in the title, description, price, category, condition, and upload up to <strong>5 photos</strong>. Optionally upload a bill for added credibility. Click "List Item" to publish it instantly.
+        </div>
+      </div>
+
+      <div class="faq-item" data-category="selling">
+        <div class="faq-q" onclick="toggleFAQ(this)">
+          <span class="faq-q-text">How many photos can I upload?</span>
+          <span class="faq-chevron">▼</span>
+        </div>
+        <div class="faq-a">
+          You can upload <strong>1 main photo</strong> (required) and <strong>up to 4 additional photos</strong> — 5 photos total. Clear, well-lit photos from multiple angles significantly increase the chance of selling.
+        </div>
+      </div>
+
+      <div class="faq-item" data-category="selling">
+        <div class="faq-q" onclick="toggleFAQ(this)">
+          <span class="faq-q-text">Can I edit my listing after posting?</span>
+          <span class="faq-chevron">▼</span>
+        </div>
+        <div class="faq-a">
+          Yes! Go to the item's detail page and click the <strong>"Edit Listing"</strong> button (only visible to you as the seller). You can update the title, description, price, photos, and condition at any time.
+        </div>
+      </div>
+
+      <div class="faq-item" data-category="selling">
+        <div class="faq-q" onclick="toggleFAQ(this)">
+          <span class="faq-q-text">How do I answer buyer questions?</span>
+          <span class="faq-chevron">▼</span>
+        </div>
+        <div class="faq-a">
+          When a buyer posts a question on your item, go to the item's detail page and scroll to the <strong>Questions</strong> section. Click <strong>"Answer"</strong> next to any unanswered question. Your answer will be visible to all visitors.
+        </div>
+      </div>
+
+      <div class="faq-item" data-category="selling">
+        <div class="faq-q" onclick="toggleFAQ(this)">
+          <span class="faq-q-text">What happens after someone buys my item?</span>
+          <span class="faq-chevron">▼</span>
+        </div>
+        <div class="faq-a">
+          Your item will be marked as <strong>Sold</strong> automatically. The sale will appear in your <strong>Sales & Earnings</strong> page (Dashboard → My Sales). You should then contact the buyer via chat to arrange delivery and collect payment directly.
+          <br><br>
+          <strong>YOVO takes 0% commission</strong> — all the money goes directly to you.
+        </div>
+      </div>
+    </div>
+
+    <!-- PAYMENT -->
+    <div class="faq-section reveal" data-category="payment">
+      <div class="faq-section-title">💳 Payment</div>
+
+      <div class="faq-item" data-category="payment">
+        <div class="faq-q" onclick="toggleFAQ(this)">
+          <span class="faq-q-text">What payment methods are accepted?</span>
+          <span class="faq-chevron">▼</span>
+        </div>
+        <div class="faq-a">
+          YOVO supports three payment methods at checkout:
+          <br><br>
+          • <strong>💳 Credit / Debit Card</strong> — Visa, Mastercard, RuPay<br>
+          • <strong>📲 UPI</strong> — Google Pay, PhonePe, Paytm, BHIM<br>
+          • <strong>💵 Cash on Delivery (COD)</strong> — Pay when your item arrives
+        </div>
+      </div>
+
+      <div class="faq-item" data-category="payment">
+        <div class="faq-q" onclick="toggleFAQ(this)">
+          <span class="faq-q-text">Where does my payment actually go — to YOVO or the seller?</span>
+          <span class="faq-chevron">▼</span>
+        </div>
+        <div class="faq-a">
+          <strong>YOVO is a peer-to-peer marketplace</strong>, meaning payments go directly between buyers and sellers. YOVO does not hold or process money.
+          <br><br>
+          After placing an order, you should <strong>chat with the seller</strong> to arrange payment transfer (via UPI ID, bank transfer, or cash on delivery). The payment method you select at checkout indicates your preference, but the actual transfer happens between you and the seller directly.
+          <br><br>
+          <strong>YOVO charges 0% commission</strong> — sellers keep 100% of the sale price.
+        </div>
+      </div>
+
+      <div class="faq-item" data-category="payment">
+        <div class="faq-q" onclick="toggleFAQ(this)">
+          <span class="faq-q-text">Is my card information safe?</span>
+          <span class="faq-chevron">▼</span>
+        </div>
+        <div class="faq-a">
+          Card details entered at checkout are used only to confirm your payment preference. YOVO does not store card numbers. All transactions are SSL-encrypted. For actual payment transfers, we recommend using UPI for the most secure and instant experience.
+        </div>
+      </div>
+
+      <div class="faq-item" data-category="payment">
+        <div class="faq-q" onclick="toggleFAQ(this)">
+          <span class="faq-q-text">Can I get a refund?</span>
+          <span class="faq-chevron">▼</span>
+        </div>
+        <div class="faq-a">
+          Refunds are handled directly between buyer and seller. Since YOVO does not process payments, we cannot issue refunds ourselves. If you have a dispute, use the <strong>chat feature</strong> to communicate with the seller. We recommend always verifying items through photos and questions before purchasing.
+        </div>
+      </div>
+    </div>
+
+    <!-- ORDERS -->
+    <div class="faq-section reveal" data-category="orders">
+      <div class="faq-section-title">📦 Orders</div>
+
+      <div class="faq-item" data-category="orders">
+        <div class="faq-q" onclick="toggleFAQ(this)">
+          <span class="faq-q-text">Where can I see my orders?</span>
+          <span class="faq-chevron">▼</span>
+        </div>
+        <div class="faq-a">
+          Go to <strong>Dashboard → My Orders</strong> or visit <a href="{% url 'my_orders' %}">/orders/</a> directly. Each order shows the status, items, payment method, and a full tracking timeline.
+        </div>
+      </div>
+
+      <div class="faq-item" data-category="orders">
+        <div class="faq-q" onclick="toggleFAQ(this)">
+          <span class="faq-q-text">What do the order statuses mean?</span>
+          <span class="faq-chevron">▼</span>
+        </div>
+        <div class="faq-a">
+          • <strong>⏳ Pending</strong> — Order received, waiting for seller confirmation<br>
+          • <strong>✅ Confirmed</strong> — Seller confirmed, preparing to ship<br>
+          • <strong>🚚 Shipped</strong> — Item is on the way to you<br>
+          • <strong>📦 Delivered</strong> — Item delivered successfully<br>
+          • <strong>❌ Cancelled</strong> — Order was cancelled
+        </div>
+      </div>
+
+      <div class="faq-item" data-category="orders">
+        <div class="faq-q" onclick="toggleFAQ(this)">
+          <span class="faq-q-text">How do I contact the seller about my order?</span>
+          <span class="faq-chevron">▼</span>
+        </div>
+        <div class="faq-a">
+          Open your order from <a href="{% url 'my_orders' %}">My Orders</a>, then click <strong>"Chat with Seller"</strong> in the order detail page. This opens a private chat about that specific item.
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCOUNT -->
+    <div class="faq-section reveal" data-category="account">
+      <div class="faq-section-title">👤 Account</div>
+
+      <div class="faq-item" data-category="account">
+        <div class="faq-q" onclick="toggleFAQ(this)">
+          <span class="faq-q-text">Is YOVO free to use?</span>
+          <span class="faq-chevron">▼</span>
+        </div>
+        <div class="faq-a">
+          <strong>100% free.</strong> Creating an account, listing items, buying, chatting — everything is free. YOVO takes absolutely zero commission on any sale.
+        </div>
+      </div>
+
+      <div class="faq-item" data-category="account">
+        <div class="faq-q" onclick="toggleFAQ(this)">
+          <span class="faq-q-text">How do I edit my profile?</span>
+          <span class="faq-chevron">▼</span>
+        </div>
+        <div class="faq-a">
+          Go to <strong>Dashboard → Edit Profile</strong> or visit <a href="{% url 'edit_profile' %}">/profile/edit/</a>. You can update your name, bio, phone number, city, and profile photo.
+        </div>
+      </div>
+
+      <div class="faq-item" data-category="account">
+        <div class="faq-q" onclick="toggleFAQ(this)">
+          <span class="faq-q-text">Can I delete my account?</span>
+          <span class="faq-chevron">▼</span>
+        </div>
+        <div class="faq-a">
+          Yes. Go to <strong>Profile → Edit Profile → Account</strong> section and click "Delete Account". This permanently removes your account and all listings. This action cannot be undone.
+        </div>
+      </div>
+    </div>
+
+    <div class="no-results reveal" id="noResults">
+      <p>😕 No questions match your search. Try different keywords.</p>
+    </div>
+
+    <!-- Contact CTA -->
+    <div class="faq-contact reveal">
+      <div class="faq-contact-icon">💬</div>
+      <h2>Still have questions?</h2>
+      <p>Can't find what you're looking for? Chat with any seller directly or browse our listings.</p>
+      <a href="{% url 'home' %}" class="btn btn-primary">Browse YOVO</a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ── Toggle FAQ item ─────────────────────────── */
+function toggleFAQ(qEl) {
+  const item = qEl.closest('.faq-item');
+  const ans  = item.querySelector('.faq-a');
+  const isOpen = item.classList.contains('open');
+  // Close all
+  document.querySelectorAll('.faq-item.open').forEach(i => {
+    i.classList.remove('open');
+    i.querySelector('.faq-a').classList.remove('open');
+  });
+  if (!isOpen) {
+    item.classList.add('open');
+    ans.classList.add('open');
+  }
+}
+
+/* ── Search filter ───────────────────────────── */
+function filterFAQ(query) {
+  const q = query.toLowerCase().trim();
+  let visible = 0;
+  document.querySelectorAll('.faq-item').forEach(item => {
+    const text = item.textContent.toLowerCase();
+    const show = !q || text.includes(q);
+    item.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+  document.querySelectorAll('.faq-section').forEach(sec => {
+    const hasVisible = [...sec.querySelectorAll('.faq-item')].some(i => i.style.display !== 'none');
+    sec.style.display = hasVisible ? '' : 'none';
+  });
+  document.getElementById('noResults').style.display = visible === 0 ? 'block' : 'none';
+}
+
+/* ── Category filter ─────────────────────────── */
+function filterCategory(cat, btn) {
+  document.querySelectorAll('.faq-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.faq-section').forEach(sec => {
+    sec.style.display = (cat === 'all' || sec.dataset.category === cat) ? '' : 'none';
+  });
+  document.querySelectorAll('.faq-item').forEach(i => i.style.display = '');
+  document.getElementById('noResults').style.display = 'none';
+  document.getElementById('faqSearch').value = '';
+}
+</script>
+{% endblock %}

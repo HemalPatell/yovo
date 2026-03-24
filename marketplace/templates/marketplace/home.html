@@ -1,0 +1,366 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}YOVO — Buy & Sell Second-Hand Clothes and Books{% endblock %}
+
+{% block content %}
+
+<!-- ══════════════ HERO ══════════════ -->
+<section class="hero" id="hero">
+  <div class="hero-bg">
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
+    <div class="shape shape-4"></div>
+  </div>
+  <div class="hero-content reveal">
+    <div class="hero-badge">🌿 Sustainable Marketplace</div>
+    <h1 class="hero-title">
+      Give Pre-Loved Items<br>
+      <span class="gradient-text">A Second Story</span>
+    </h1>
+    <p class="hero-subtitle">
+      Buy and sell second-hand clothes, books &amp; accessories. Discover unique finds, help the planet, and save big — all in one beautiful place.
+    </p>
+    <div class="hero-actions">
+      <a href="#browse" class="btn btn-primary btn-lg">Browse Items</a>
+      {% if user.is_authenticated %}
+      <a href="{% url 'post_item' %}" class="btn btn-outline btn-lg">Sell Something</a>
+      {% else %}
+      <a href="{% url 'register' %}" class="btn btn-outline btn-lg">Start Selling</a>
+      {% endif %}
+    </div>
+    <div class="hero-stats">
+      <div class="stat">
+        <span class="stat-num">10K+</span>
+        <span class="stat-label">Items Listed</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num">5K+</span>
+        <span class="stat-label">Happy Buyers</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num">₹2M+</span>
+        <span class="stat-label">Saved Together</span>
+      </div>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="hero-card-float card-float-1 reveal-delay-1">
+      <div class="float-card">
+        <div class="float-card-emoji">👗</div>
+        <div class="float-card-text">
+          <strong>Vintage Jacket</strong>
+          <span>₹799</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-card-float card-float-2 reveal-delay-2">
+      <div class="float-card">
+        <div class="float-card-emoji">📚</div>
+        <div class="float-card-text">
+          <strong>Classic Novel</strong>
+          <span>₹150</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-card-float card-float-3 reveal-delay-3">
+      <div class="float-card sold-badge-wrap">
+        <div class="float-card-emoji">✅</div>
+        <div class="float-card-text">
+          <strong>Just Sold!</strong>
+          <span>₹450</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ CATEGORIES ══════════════ -->
+<section class="categories-section">
+  <div class="container">
+    <div class="section-header reveal">
+      <h2>Shop by Category</h2>
+      <p>From vintage threads to timeless reads</p>
+    </div>
+    <div class="categories-grid">
+
+      <!-- CLOTHES -->
+      <div class="category-card-wrap reveal">
+        <a href="{% url 'category' 'clothes' %}" class="category-card">
+          <div class="category-icon">👗</div>
+          <h3>Clothes</h3>
+          <p>Vintage, casual, formal — find your style</p>
+          <span class="category-arrow">→</span>
+        </a>
+        <div class="subcategory-list">
+          <span class="subcategory-heading">Browse by type</span>
+          <div class="subcategory-pills">
+            <a href="{% url 'category' 'clothes' %}?subcategory=tops" class="sub-pill">👕 Tops</a>
+            <a href="{% url 'category' 'clothes' %}?subcategory=shirts" class="sub-pill">👔 Shirts</a>
+            <a href="{% url 'category' 'clothes' %}?subcategory=jeans" class="sub-pill">👖 Jeans</a>
+            <a href="{% url 'category' 'clothes' %}?subcategory=dresses" class="sub-pill">👗 Dresses</a>
+            <a href="{% url 'category' 'clothes' %}?subcategory=jackets" class="sub-pill">🧥 Jackets</a>
+            <a href="{% url 'category' 'clothes' %}?subcategory=ethnic" class="sub-pill">🥻 Ethnic</a>
+            <a href="{% url 'category' 'clothes' %}?subcategory=activewear" class="sub-pill">🏃 Activewear</a>
+            <a href="{% url 'category' 'clothes' %}?subcategory=winterwear" class="sub-pill">🧤 Winterwear</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOOKS -->
+      <div class="category-card-wrap reveal">
+        <a href="{% url 'category' 'books' %}" class="category-card">
+          <div class="category-icon">📚</div>
+          <h3>Books</h3>
+          <p>Fiction, non-fiction, textbooks and more</p>
+          <span class="category-arrow">→</span>
+        </a>
+        <div class="subcategory-list">
+          <span class="subcategory-heading">Browse by genre</span>
+          <div class="subcategory-pills">
+            <a href="{% url 'category' 'books' %}?subcategory=fiction" class="sub-pill">📖 Fiction</a>
+            <a href="{% url 'category' 'books' %}?subcategory=nonfiction" class="sub-pill">📰 Non-Fiction</a>
+            <a href="{% url 'category' 'books' %}?subcategory=textbooks" class="sub-pill">🎓 Textbooks</a>
+            <a href="{% url 'category' 'books' %}?subcategory=children" class="sub-pill">🧸 Children's</a>
+            <a href="{% url 'category' 'books' %}?subcategory=comics" class="sub-pill">💥 Comics</a>
+            <a href="{% url 'category' 'books' %}?subcategory=selfhelp" class="sub-pill">💡 Self-Help</a>
+            <a href="{% url 'category' 'books' %}?subcategory=biography" class="sub-pill">🧑 Biography</a>
+            <a href="{% url 'category' 'books' %}?subcategory=science" class="sub-pill">🔬 Science</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACCESSORIES -->
+      <div class="category-card-wrap reveal">
+        <a href="{% url 'category' 'accessories' %}" class="category-card">
+          <div class="category-icon">👜</div>
+          <h3>Accessories</h3>
+          <p>Bags, jewellery, watches, belts &amp; more</p>
+          <span class="category-arrow">→</span>
+        </a>
+        <div class="subcategory-list">
+          <span class="subcategory-heading">Browse by type</span>
+          <div class="subcategory-pills">
+            <a href="{% url 'category' 'accessories' %}?subcategory=bags" class="sub-pill">👜 Bags</a>
+            <a href="{% url 'category' 'accessories' %}?subcategory=jewellery" class="sub-pill">💍 Jewellery</a>
+            <a href="{% url 'category' 'accessories' %}?subcategory=watches" class="sub-pill">⌚ Watches</a>
+            <a href="{% url 'category' 'accessories' %}?subcategory=belts" class="sub-pill">🔗 Belts</a>
+            <a href="{% url 'category' 'accessories' %}?subcategory=sunglasses" class="sub-pill">🕶️ Sunglasses</a>
+            <a href="{% url 'category' 'accessories' %}?subcategory=footwear" class="sub-pill">👟 Footwear</a>
+            <a href="{% url 'category' 'accessories' %}?subcategory=caps" class="sub-pill">🧢 Caps</a>
+            <a href="{% url 'category' 'accessories' %}?subcategory=scarves" class="sub-pill">🧣 Scarves</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ BROWSE / FILTER ══════════════ -->
+<section class="browse-section" id="browse">
+  <div class="container">
+    <div class="browse-header reveal">
+      <h2>Browse Listings</h2>
+      <p>{{ items.count }} item{{ items.count|pluralize }} available</p>
+    </div>
+
+    <!-- Filter Bar -->
+    <form method="GET" action="{% url 'home' %}#browse" class="filter-bar reveal">
+      <div class="filter-row">
+        <div class="filter-group">
+          <input type="text" name="search" value="{{ search }}" placeholder="Search items..." class="filter-input" />
+        </div>
+        <div class="filter-group">
+          <select name="category" class="filter-input" id="filterCategory">
+            <option value="">All Categories</option>
+            {% for val, label in category_choices %}
+            <option value="{{ val }}" {% if selected_category == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="filter-group" id="filterSubcategoryGroup" {% if not selected_category %}style="display:none"{% endif %}>
+          <select name="subcategory" class="filter-input" id="filterSubcategory">
+            <option value="">All Subcategories</option>
+            {% for val, label in subcategory_choices %}
+            <option value="{{ val }}" {% if selected_subcategory == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="filter-group">
+          <select name="location" class="filter-input">
+            <option value="">All Locations</option>
+            {% for val, label in location_choices %}
+            <option value="{{ val }}" {% if selected_location == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="filter-group filter-price">
+          <input type="number" name="min_price" value="{{ min_price }}" placeholder="Min ₹" class="filter-input" />
+          <span>–</span>
+          <input type="number" name="max_price" value="{{ max_price }}" placeholder="Max ₹" class="filter-input" />
+        </div>
+        <button type="submit" class="btn btn-primary">Filter</button>
+        <a href="{% url 'home' %}#browse" class="btn btn-ghost">Clear</a>
+      </div>
+    </form>
+
+    <!-- Items Grid -->
+    {% if items %}
+    <div class="items-grid" id="itemsGrid">
+      {% for item in items %}
+      <article class="item-card reveal">
+        <a href="{% url 'item_detail' item.pk %}" class="item-card-link">
+          <div class="item-image-wrap">
+            {% if item.image %}
+            <img src="{{ item.image.url }}" alt="{{ item.title }}" class="item-image" loading="lazy" />
+            {% else %}
+            <div class="item-image-placeholder">
+              {% if item.category == 'clothes' %}👗{% elif item.category == 'accessories' %}👜{% else %}📚{% endif %}
+            </div>
+            {% endif %}
+            <div class="item-category-badge">{{ item.get_category_display }}{% if item.subcategory %} › {{ item.get_subcategory_display }}{% endif %}</div>
+          </div>
+          <div class="item-body">
+            <h3 class="item-title">{{ item.title }}</h3>
+            <p class="item-desc">{{ item.description|truncatechars:80 }}</p>
+            <div class="item-meta">
+              <span class="item-location">📍 {{ item.get_location_display }}</span>
+              <span class="item-date">{{ item.created_at|timesince }} ago</span>
+            </div>
+          </div>
+        </a>
+        <div class="item-footer">
+          <span class="item-price">₹{{ item.price }}</span>
+          <div class="item-actions">
+            {% if user.is_authenticated and user != item.seller %}
+            <a href="{% url 'toggle_wishlist' item.pk %}" class="btn btn-sm {% if item.pk in wishlist_ids %}btn-wishlist-active{% else %}btn-ghost{% endif %}" title="{% if item.pk in wishlist_ids %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
+              {% if item.pk in wishlist_ids %}♥{% else %}♡{% endif %}
+            </a>
+            <a href="{% url 'add_to_cart' item.pk %}" class="btn btn-sm btn-primary">Add to Cart</a>
+            <a href="{% url 'chat' item.pk item.seller.pk %}" class="btn btn-sm btn-ghost">Chat</a>
+            {% elif not user.is_authenticated %}
+            <a href="{% url 'login' %}?next={% url 'home' %}" class="btn btn-sm btn-primary">Add to Cart</a>
+            {% else %}
+            <span class="your-listing">Your listing</span>
+            {% endif %}
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state reveal">
+      <div class="empty-icon">🔍</div>
+      <h3>No items found</h3>
+      <p>Try adjusting your filters or be the first to list something!</p>
+      {% if user.is_authenticated %}
+      <a href="{% url 'post_item' %}" class="btn btn-primary">Post an Item</a>
+      {% else %}
+      <a href="{% url 'register' %}" class="btn btn-primary">Join YOVO</a>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- ══════════════ HOW IT WORKS ══════════════ -->
+<section class="how-section">
+  <div class="container">
+    <div class="section-header reveal">
+      <h2>How YOVO Works</h2>
+      <p>Simple, fast, and sustainable</p>
+    </div>
+    <div class="how-grid">
+      <div class="how-step reveal">
+        <div class="step-num">01</div>
+        <div class="step-icon">📸</div>
+        <h3>List Your Item</h3>
+        <p>Photograph your item, set a fair price, and post it in under 2 minutes.</p>
+      </div>
+      <div class="how-step reveal">
+        <div class="step-num">02</div>
+        <div class="step-icon">💬</div>
+        <h3>Chat & Connect</h3>
+        <p>Buyers message sellers directly with our real-time chat system.</p>
+      </div>
+      <div class="how-step reveal">
+        <div class="step-num">03</div>
+        <div class="step-icon">🤝</div>
+        <h3>Buy & Sell</h3>
+        <p>Meet up or arrange delivery. Money stays between you — no hidden fees.</p>
+      </div>
+      <div class="how-step reveal">
+        <div class="step-num">04</div>
+        <div class="step-icon">🌿</div>
+        <h3>Help the Planet</h3>
+        <p>Every re-used item reduces waste and CO₂. You're making a difference.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ POST ITEM (if logged in) ══════════════ -->
+{% if user.is_authenticated %}
+<section class="post-section" id="sell">
+  <div class="container">
+    <div class="post-card reveal">
+      <div class="post-card-header">
+        <h2>List an Item for Sale</h2>
+        <p>Clear your space and earn some cash</p>
+      </div>
+      <a href="{% url 'post_item' %}" class="btn btn-primary btn-lg">Post an Item →</a>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ══════════════ CONTACT ══════════════ -->
+<section class="contact-section" id="contact">
+  <div class="container">
+    <div class="contact-card reveal">
+      <div class="contact-content">
+        <h2>Have Questions?</h2>
+        <p>Our team is here to help you get the most out of YOVO.</p>
+        <a href="mailto:hello@yovo.in" class="btn btn-primary">hello@yovo.in</a>
+      </div>
+      <div class="contact-illustration">
+        <div class="illustration-circle">💌</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const SUBCAT_MAP = {
+  clothes:     {tops:'Tops & T-Shirts',shirts:'Shirts & Blouses',jeans:'Jeans & Trousers',dresses:'Dresses & Skirts',jackets:'Jackets & Coats',ethnic:'Ethnic & Traditional',activewear:'Activewear & Sportswear',winterwear:'Winterwear & Sweaters'},
+  books:       {fiction:'Fiction & Novels',nonfiction:'Non-Fiction',textbooks:'Textbooks & Academic',children:"Children's Books",comics:'Comics & Graphic Novels',selfhelp:'Self-Help & Motivation',biography:'Biography & Memoir',science:'Science & Technology'},
+  accessories: {bags:'Bags & Backpacks',jewellery:'Jewellery & Rings',watches:'Watches',belts:'Belts & Wallets',sunglasses:'Sunglasses & Eyewear',footwear:'Footwear & Shoes',caps:'Caps & Hats',scarves:'Scarves & Stoles'},
+};
+const catSel = document.getElementById('filterCategory');
+const subSel = document.getElementById('filterSubcategory');
+const subGrp = document.getElementById('filterSubcategoryGroup');
+const curSub = "{{ selected_subcategory }}";
+
+function updateSubcats(catVal, selected) {
+  subSel.innerHTML = '<option value="">All Subcategories</option>';
+  if (catVal && SUBCAT_MAP[catVal]) {
+    subGrp.style.display = '';
+    Object.entries(SUBCAT_MAP[catVal]).forEach(([val, label]) => {
+      const opt = document.createElement('option');
+      opt.value = val; opt.textContent = label;
+      if (val === selected) opt.selected = true;
+      subSel.appendChild(opt);
+    });
+  } else {
+    subGrp.style.display = 'none';
+  }
+}
+catSel.addEventListener('change', () => updateSubcats(catSel.value, ''));
+updateSubcats(catSel.value, curSub);
+</script>
+{% endblock %}
