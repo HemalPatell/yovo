@@ -208,6 +208,8 @@
 @media (max-width: 500px) {
   .photo-grid { grid-template-columns: repeat(2, 1fr); }
   .form-row-2 { grid-template-columns: 1fr; }
+  .btn-lg { width: 100%; justify-content: center; font-size: 1rem; padding: 14px 20px; }
+  .post-panel-body { padding: 16px; }
 }
 /* ── Gender Selector ─────────────────────────────── */
 .gender-options {
@@ -307,7 +309,7 @@
                   <button type="button" class="photo-remove" onclick="clearSlot('photo_{{ i }}')">✕</button>
                   <span class="photo-slot-icon">+</span>
                   <span class="photo-slot-label">Photo {{ i }}</span>
-                  <input type="file" name="photo_{{ i }}" id="input-photo_{{ i }}" accept="image/*" onchange="previewSlot('photo_{{ i }}', this)" />
+                  <input type="file" name="extra_images" id="input-photo_{{ i }}" accept="image/*" onchange="previewSlot('photo_{{ i }}', this)" />
                 </div>
                 {% endfor %}
               </div>
